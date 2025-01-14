@@ -8,21 +8,24 @@ import axios from "axios";
 dotenv.config();
 
 // Google OAuth2 Client
-const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID!);
+const googleClient = new OAuth2Client({
+  clientId:process.env.VITE_CLIENT_ID!,
+  clientSecret: process.env.VITE_CLIENT_SECRET!
+});
 
 // 1. Google Sign-In
 export const googleSignin = async (req: Request, res: Response) => {
-  const { tokenId } = req.body; // The ID token received from the frontend
+  const { idToken } = req.body; // The ID token received from the frontend
 
-  if (!tokenId) {
+  if (!idToken) {
     return res.status(400).json({ message: "Token ID is required" });
   }
 
   try {
     // Verify the Google ID token
     const ticket = await googleClient.verifyIdToken({
-      idToken: tokenId,
-      audience: process.env.GOOGLE_CLIENT_ID!, // Audience is your client ID
+      idToken: idToken,
+      audience: process.env.VITE_CLIENT_ID!, // Audience is your client ID
     });
     
     const payload = ticket.getPayload();

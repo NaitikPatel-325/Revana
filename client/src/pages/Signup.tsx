@@ -15,10 +15,12 @@ const Signup = () => {
 
   const handleGoogleLoginSuccess = async (credentialResponse: any) => {
     try {
-      const { credential } = credentialResponse;
+      console.log(credentialResponse);
+      const { credential } =  credentialResponse; // Await the credentialResponse itself
       const response = await loginWithGoogle({ idToken: credential });
       dispatch(updateIsLoggedIn(true));
-      navigate('/comments'); // Redirect after Google login success
+      console.log(response);
+      navigate('/comments'); 
     } catch (error) {
       console.error('Google Login Failed:', error);
     }
