@@ -1,45 +1,75 @@
-import { PayloadAction, createSlice } from "@reduxjs/toolkit";
+// import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 
-// Define types for the state
-export interface appSliceState {
-  currentUser: {
-    username?: string;
-    picture?: string;
-    email?: string;
-  };
-  isLoggedIn: boolean;
-  loginMethod?: "google" | "github"; // Track the login method
-  currentWidth: number;
-}
+// // Define types for the state
+// export interface appSliceState {
+//   currentUser: {
+//     username?: string;
+//     picture?: string;
+//     email?: string;
+//   };
+//   isLoggedIn: boolean;
+//   loginMethod?: "google" | "github"; // Track the login method
+//   currentWidth: number;
+// }
 
-const initialState: appSliceState = {
-  currentUser: {},
-  isLoggedIn: false,
-  loginMethod: undefined, // Initial login method is undefined
-  currentWidth: window.innerWidth,
-};
+// const initialState: appSliceState = {
+//   currentUser: {},
+//   isLoggedIn: false,
+//   loginMethod: undefined, // Initial login method is undefined
+//   currentWidth: window.innerWidth,
+// };
+
+// const appSlice = createSlice({
+//   name: "appSlice",
+//   initialState,
+//   reducers: {
+//     updateCurrentUser: (
+//       state,
+//       action: PayloadAction<appSliceState["currentUser"]>
+//     ) => {
+//       state.currentUser = action.payload;
+//     },
+//     updateIsLoggedIn: (state, action: PayloadAction<boolean>) => {
+//       state.isLoggedIn = action.payload;
+//     },
+//     setLoginMethod: (state, action: PayloadAction<"google" | "github">) => {
+//       state.loginMethod = action.payload;
+//     },
+//     setCurrentWidth: (state, action: PayloadAction<number>) => {
+//       state.currentWidth = action.payload;
+//     },
+//   },
+// });
+
+// export default appSlice.reducer;
+// export const { updateCurrentUser, updateIsLoggedIn, setLoginMethod, setCurrentWidth } = appSlice.actions;
+
+
+import { createSlice } from "@reduxjs/toolkit";
 
 const appSlice = createSlice({
-  name: "appSlice",
-  initialState,
+  name: "app",
+  initialState: {
+    user: null,
+    loginMethod: null,
+    isLoggedIn: false,
+    currentWidth: window.innerWidth, // Add this if `currentWidth` is being used
+  },
   reducers: {
-    updateCurrentUser: (
-      state,
-      action: PayloadAction<appSliceState["currentUser"]>
-    ) => {
-      state.currentUser = action.payload;
+    updateCurrentUser: (state, action) => {
+      state.user = action.payload;
     },
-    updateIsLoggedIn: (state, action: PayloadAction<boolean>) => {
+    updateIsLoggedIn: (state, action) => {
       state.isLoggedIn = action.payload;
     },
-    setLoginMethod: (state, action: PayloadAction<"google" | "github">) => {
+    updateLoginMethod: (state, action) => { // ✅ Add this action
       state.loginMethod = action.payload;
     },
-    setCurrentWidth: (state, action: PayloadAction<number>) => {
+    setCurrentWidth: (state, action) => {  // ADD THIS
       state.currentWidth = action.payload;
     },
   },
 });
 
+export const { updateCurrentUser, updateIsLoggedIn, setCurrentWidth, updateLoginMethod } = appSlice.actions;
 export default appSlice.reducer;
-export const { updateCurrentUser, updateIsLoggedIn, setLoginMethod, setCurrentWidth } = appSlice.actions;

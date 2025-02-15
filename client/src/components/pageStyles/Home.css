@@ -1,0 +1,40 @@
+@keyframes flyIn {
+    0% {
+      transform: translateY(100px) rotate(0deg);
+      opacity: 0;
+    }
+    25% {
+      transform: translateY(-50px) rotate(-20deg);
+      opacity: 1;
+    }
+    50% {
+      transform: translateY(20px) rotate(20deg);
+    }
+    100% {
+      transform: translateY(0) rotate(0);
+      opacity: 1;
+    }
+  }
+  
+  @keyframes glow {
+    0%, 100% {
+      text-shadow: 0 0 10px rgba(255, 255, 255, 0.6), 0 0 20px rgba(255, 255, 255, 0.4);
+    }
+    25% {
+      text-shadow: 0 0 15px rgba(255, 0, 0, 0.6), 0 0 25px rgba(255, 0, 0, 0.5);
+    }
+    50% {
+      text-shadow: 0 0 25px rgba(255, 0, 0, 0.8), 0 0 35px rgba(255, 0, 0, 0.6), 0 0 50px rgba(255, 0, 0, 0.4);
+    }
+  }
+  
+  .letter {
+    display: inline-block;
+    animation: flyIn 1s ease forwards; /* Animation for letters flying in */
+  }
+  
+  .glow {
+    animation: glow 1.5s ease forwards; /* Glowing effect for "JScribe" */
+    animation-delay: 0.5s; /* Delay for glow after letters are in place */
+  }
+  

@@ -1,14 +1,12 @@
-import { Link } from 'react-router-dom';
+import { Link } from "react-router-dom";
 import "../../index.css";
 
 export default function CommentHeader() {
   return (
-    <nav className="bg-blue-600 p-4 sticky top-0 z-50">
+    <nav className="fixed top-0 left-0 w-full bg-blue-600 p-4 shadow-md z-50">
       <div className="max-w-7xl mx-auto flex justify-between items-center">
         {/* Sticky Title */}
-        <div className="text-white font-bold text-2xl">
-          Comment Sections
-        </div>
+        <div className="text-white font-bold text-2xl">Comment Sections</div>
 
         {/* Navigation Links */}
         <div className="space-x-6">

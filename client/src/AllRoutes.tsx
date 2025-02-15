@@ -8,6 +8,8 @@ const Signup = lazy(() => import("./pages/Signup"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Navbar = lazy(()=> import("./pages/Comments/comments"))
 const Movies = lazy(()=> import("./pages/Comments/movies"))
+const VideoPage = lazy(()=> import("./pages/Comments/videopage"))
+const VideoSearch = lazy(()=> import("./pages/Comments/videos"))
 
 
 export default function AllRoutes() {
@@ -25,6 +27,11 @@ export default function AllRoutes() {
         <Route path="/signup" element={<Signup />} />
         <Route path="/comments" element={<Navbar />} />
         <Route path="/comments/movies" element={<Movies />} />
+        <Route path="/comments/videos/:videoId" element={<VideoPage />} />
+        <Route path="/comments/videos/:videoId/add-comment" element={<VideoSearch />} />
+        
+        
+        <Route path="/comments/videos/" element={<VideoSearch />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Suspense>

@@ -7,6 +7,17 @@ export interface userInfoType {
   picture?: string;
 }
 
+interface googleSignInResponseType {
+  token: string;
+  user: userInfoType;
+}
+
+interface githubSignInResponseType {
+  token: string;
+  user: userInfoType;
+}
+
+
 export interface loginCredentialsType {
   email: string;
   password: string;
@@ -44,22 +55,23 @@ export const api = createApi({
       query: () => ({
         url: "/user/logout",
         method: "POST",
+        credentials: "include",
       }),
     }),
     getUserDetails: builder.query<userInfoType, void>({
       query: () => ({
         url: "/user/user-details",
-        cache: "no-store", // To avoid caching the user details
+        cache: "no-store",
       }),
     }),
-    googleSignIn: builder.mutation<userInfoType, { idToken: string }>({
+    googleSignIn: builder.mutation<googleSignInResponseType, { idToken: string }>({
       query: (body) => ({
         url: "/user/googleSignin",
         method: "POST",
         body,
       }),
-    }),
-    githubSignIn: builder.mutation<userInfoType, { code: string }>({
+    }),    
+    githubSignIn: builder.mutation<githubSignInResponseType, { code: string }>({
       query: (body) => ({
         url: "/user/githubSignin",
         method: "POST",

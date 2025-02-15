@@ -1,8 +1,17 @@
 import express from "express";
-import { googleSignin, githubSignin } from "../controllers/UserController";
+import { googleSignin, githubSignin, getUserDetails, logout, searchVideos, getVideoComments, addComment, getVideoById } from "../controllers/UserController";
 
 export const UserAuthRouter = express.Router();
 
-// Correct the routes by adding leading slashes
-UserAuthRouter.post("/googleSignin", googleSignin); // Google sign-in route
-UserAuthRouter.post("/githubSignin", githubSignin); // GitHub sign-in route
+UserAuthRouter.post("/googleSignin", googleSignin);
+UserAuthRouter.post("/githubSignin", githubSignin);
+UserAuthRouter.get("/user-details",getUserDetails);
+UserAuthRouter.post("/logout", logout);
+// UserAuthRouter.get("/comments/videos/search",searchVideos);
+// UserAuthRouter.get("/comments/videos/:videoId", getVideoComments);
+// UserAuthRouter.post("/comments/videos/:videoId/add-comment", addComment);
+
+UserAuthRouter.get("/comments/videos/search", searchVideos);
+UserAuthRouter.get("/comments/videos/:videoId", getVideoComments);
+UserAuthRouter.post("/comments/videos/:videoId/add-comment", addComment);
+UserAuthRouter.get("/comments/videos/get-video", getVideoById);
