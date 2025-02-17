@@ -9,6 +9,12 @@ const GITHUB_REDIRECT_URI = process.env.VITE_GITHUB_REDIRECT_URI || "http://loca
 
 dotenv.config();
 
+interface SentimentCountType{
+  good:number,
+  neutral:number,
+  bad:number
+}
+
 const googleClient = new OAuth2Client(process.env.VITE_CLIENT_ID!);
 
 export const googleSignin = async (req: Request, res: Response) => {
@@ -62,96 +68,6 @@ export const googleSignin = async (req: Request, res: Response) => {
   } catch (err) {
     console.error("❌ Error during Google Sign-In:", err);
     res.status(500).json({ message: "Error signing in with Google", error: err });
-  }
-};
-
-
-export const githubSignin = async (req: Request, res: Response) => {
-
-  
-
-  const { code } = req.body;
-  if (!code) return res.status(400).json({ message: "GitHub code is required" });
-
-  try {
-    console.log("GitHub OAuth Request Data:", {
-      client_id: process.env.VITE_GITHUB_CLIENT_ID,
-      client_secret: process.env.VITE_GITHUB_CLIENT_SECRET,
-      code,
-      redirect_uri: process.env.VITE_GITHUB_REDIRECT_URI,
-    });
-    
-    // 🔹 Exchange code for access token
-    const response = await axios.post(
-      "https://github.com/login/oauth/access_token",
-      {
-        client_id: process.env.VITE_GITHUB_CLIENT_ID,
-        client_secret: process.env.VITE_GITHUB_CLIENT_SECRET,
-        code,
-        //redirect_uri: process.env.VITE_GITHUB_REDIRECT_URI, // ✅ Ensure this is passed
-      },
-      { headers: { Accept: "application/json" } }
-    );
-
-
-    if (!response.data || response.data.error) {
-      return res.status(400).json({ message: "GitHub authentication failed", error: response.data });
-    }
-
-    const { access_token } = response.data;
-    if (!access_token) return res.status(400).json({ message: "GitHub access token not received" });
-
-    // 🔹 Fetch GitHub User Info
-    const userInfo = await axios.get("https://api.github.com/user", {
-      headers: { Authorization: `Bearer ${access_token}` },
-    });
-
-    const { id, login, avatar_url } = userInfo.data;
-    if (!id || !login) {
-      return res.status(400).json({ message: "Invalid GitHub user data" });
-    }
-
-    // 🔹 Fetch User Email
-    const emailResponse = await axios.get("https://api.github.com/user/emails", {
-      headers: { Authorization: `Bearer ${access_token}` },
-    });
-
-    const primaryEmail = emailResponse.data.find((email: any) => email.primary)?.email || "";
-
-    // 🔹 Check if User Already Exists
-    let user = await User.findOne({ email: primaryEmail });
-
-    if (user) {
-      // If user exists, update provider ID
-      user.providerId = id;
-      await user.save();
-    } else {
-      // If new user, create a new record
-      user = new User({
-        username: login,
-        email: primaryEmail,
-        picture: avatar_url,
-        provider: "github",
-        providerId: id,
-      });
-      await user.save();
-    }
-
-    // 🔹 Generate JWT Token
-    const token = jwt.sign({ userId: user._id }, process.env.VITE_JWT_KEY!, { expiresIn: "7d" });
-
-    // 🔹 Set Cookie & Send Response
-    //res.cookie("token", token, { httpOnly: true, secure: true, sameSite: "strict" });
-    
-    
-    return res.status(200).json({
-      token,  // ✅ Now returning the token
-      user: { username: user.username, email: user.email, picture: user.picture },
-    });
-
-  } catch (err: any) {
-    console.error("❌ GitHub Sign-In Error:", err.response?.data || err.message);
-    return res.status(500).json({ message: "GitHub login failed", error: err.response?.data || err.message });
   }
 };
 
@@ -219,10 +135,12 @@ export const getVideoComments = async (req: Request, res: Response) => {
 
   if (!videoId) return res.status(400).json({ message: "Video ID is required" });
 
+  console.log(videoId);
+
   try {
     const API_KEY = process.env.VITE_YOUTUBE_API_KEY;
     const response = await axios.get(
-      `https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId=${videoId}&maxResults=100&key=${API_KEY}`
+      `https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId=${videoId}&maxResults=400&key=${API_KEY}`
     );
 
     let comments = response.data.items.map((item: any) => ({
@@ -233,35 +151,167 @@ export const getVideoComments = async (req: Request, res: Response) => {
       totalReplyCount: item.snippet.totalReplyCount,
     }));
 
+    const flaskResponse = await axios.post('http://127.0.0.1:5000/api/v1/filter-comments', {
+      comments: comments.map((comment: any) => comment.text)
+    });
+
+    const filteredComments = flaskResponse.data.comments;
+
+    // Filter out comments that were flagged as meaningless
+    comments = comments.filter((comment: any) => filteredComments.includes(comment.text));
+
     // Filtering out unwanted comments
-    comments = comments.filter((comment:any) => {
+    comments = comments.filter((comment: any) => {
       // Remove comments that are only emojis
-      const onlyEmojis = /^([\p{Emoji_Presentation}\s]+)$/u.test(comment.text);
+      const containsEmoji = /[\p{Emoji_Presentation}\p{Emoji}\u2000-\u3300]/gu.test(comment.text);
       
-      // Remove comments that contain only a timestamp link
+      // Remove comments that are only a timestamp link (optional)
       const onlyTimestamp = /<a href=.*>\d{1,2}:\d{2}<\/a>/.test(comment.text);
 
-      return !onlyEmojis && !onlyTimestamp;
+      // Keep comments that don't contain emojis or timestamps
+      return !containsEmoji && !onlyTimestamp;
     });
 
     // Sorting: First by totalReplyCount, then by likeCounts (both in descending order)
-    comments.sort((a:any, b:any) => {
+    comments.sort((a: any, b: any) => {
       if (b.totalReplyCount !== a.totalReplyCount) {
         return b.totalReplyCount - a.totalReplyCount; // Sort by replies first
       }
       return b.likeCounts - a.likeCounts; // If replies are the same, sort by likes
     });
-    console.log("Filtered & Sorted Comments:", comments);
-    const comment = await axios.post("http://127.0.0.1:5000/api/v1/youtube-comments", { comments }); //flask Api
- 
-    console.log("Comment:", comment);
 
-    return res.json({ comment });
+    console.log("Filtered & Sorted Comments:", comments);
+
+    // Extract the comments' text for sentiment analysis
+    const commentTexts = comments.map((comment: { text: any; }) => comment.text);
+
+    console.log("Comments Text   : ", commentTexts);
+
+    // Format the comment texts in the required JSON structure with double quotes
+    const commentsData = {
+      comments: commentTexts
+    };
+
+    // Call the sentiment analysis API
+    const sentimentResponse = await axios.post("http://127.0.0.1:5000/api/v1/youtube-comments", commentsData);
+
+    if (!sentimentResponse.data.comments) {
+      return res.status(500).json({ message: "Error in sentiment analysis" });
+    }
+
+    // Combine the sentiment data with the original comment data
+    const commentsWithSentiment = comments.map((comment: any, index: any) => {
+      const sentiment = sentimentResponse.data.comments[index];
+
+      return {
+        ...comment,
+        sentiment: sentiment.Sentiment, // Sentiment score from API
+        sentimentText: sentiment.Comment, // Processed comment text
+      };
+    });
+
+    const sentimentCounts: SentimentCountType = {
+      good: commentsWithSentiment.filter((comment: any) => comment.sentiment === 2).length,
+      neutral: commentsWithSentiment.filter((comment: any) => comment.sentiment === 1).length,
+      bad: commentsWithSentiment.filter((comment: any) => comment.sentiment === 0).length,
+    };
+
+    // Send back the response with the combined data
+    res.json({ comments: commentsWithSentiment, sentimentCounts});
   } catch (error) {
     console.error("YouTube Comments Error:", error);
     return res.status(500).json({ message: "Failed to fetch comments" });
   }
 };
+
+
+// export const getVideoComments = async (req: Request, res: Response) => {
+//   const { videoId } = req.params;
+
+//   if (!videoId) return res.status(400).json({ message: "Video ID is required" });
+
+//   console.log(videoId);
+
+//   try {
+//     const API_KEY = process.env.VITE_YOUTUBE_API_KEY;
+//     const response = await axios.get(
+//       `https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId=${videoId}&maxResults=400&key=${API_KEY}`
+//     );
+
+//     let comments = response.data.items.map((item: any) => ({
+//       author: item.snippet.topLevelComment.snippet.authorDisplayName,
+//       text: item.snippet.topLevelComment.snippet.textDisplay,
+//       profileImage: item.snippet.topLevelComment.snippet.authorProfileImageUrl,
+//       likeCounts: item.snippet.topLevelComment.snippet.likeCount,
+//       totalReplyCount: item.snippet.totalReplyCount,
+//     }));
+
+//     // Filtering out unwanted comments
+//     comments = comments.filter((comment: any) => {
+//       // Remove comments that are only emojis
+//       const containsEmoji = /[\p{Emoji_Presentation}\p{Emoji}\u2000-\u3300]/gu.test(comment.text);
+      
+//       // Remove comments that are only a timestamp link (optional)
+//       const onlyTimestamp = /<a href=.*>\d{1,2}:\d{2}<\/a>/.test(comment.text);
+
+//       // Keep comments that don't contain emojis or timestamps
+//       return !containsEmoji && !onlyTimestamp;
+//     });
+
+//     // Sorting: First by totalReplyCount, then by likeCounts (both in descending order)
+//     comments.sort((a:any, b:any) => {
+//       if (b.totalReplyCount !== a.totalReplyCount) {
+//         return b.totalReplyCount - a.totalReplyCount; // Sort by replies first
+//       }
+//       return b.likeCounts - a.likeCounts; // If replies are the same, sort by likes
+//     });
+
+
+//     console.log("Filtered & Sorted Comments:", comments);
+//     // let com = comments.text;
+//     // const comment = await axios.post("http://127.0.0.1:5000/api/v1/youtube-comments", { com }); //flask Api
+
+//     // console.log("Flask API Response:", comment.data);
+//     // console.log("Comment:", comment.config.data);
+
+//     // return res.json({ comment: comment.config.data });
+
+//     // Extract the comments' text for sentiment analysis
+//     const commentTexts = comments.map((comments: { text: any; }) => comments.text);
+
+//     console.log("Comments Text   : ",commentTexts);
+
+//     const commentsData = {
+//       comments: commentTexts
+//     };
+
+//     console.log("Comments Data   : ",commentsData);
+
+//     // Call the sentiment analysis API
+//     const sentimentResponse = await axios.post("http://127.0.0.1:5000/api/v1/youtube-comments", { commentsData });
+
+//     if (!sentimentResponse.data.comments) {
+//       return res.status(500).json({ message: "Error in sentiment analysis" });
+//     }
+
+//     // Combine the sentiment data with the original comment data
+//     const commentsWithSentiment = comments.map((comment:any, index:any) => {
+//       const sentiment = sentimentResponse.data.comments[index];
+
+//       return {
+//         ...comment,
+//         sentiment: sentiment.Sentiment, // Sentiment score from API
+//         sentimentText: sentiment.Comment, // Processed comment text
+//       };
+//     });
+
+//     // Send back the response with the combined data
+//     res.json({ comments: commentsWithSentiment });
+//   } catch (error) {
+//     console.error("YouTube Comments Error:", error);
+//     return res.status(500).json({ message: "Failed to fetch comments" });
+//   }
+// };
 
 
 export const addComment = async (req: Request, res: Response) => {

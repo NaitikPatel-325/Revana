@@ -1,9 +1,7 @@
 import { GoogleLogin } from "@react-oauth/google";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import GitHubLogin from "react-github-login";
-import { FaGithub } from "react-icons/fa";
-import { useGoogleSignInMutation, useGithubSignInMutation } from "@/redux/slices/api";
+import { useGoogleSignInMutation } from "@/redux/slices/api";
 import { updateIsLoggedIn, updateCurrentUser, updateLoginMethod } from "@/redux/slices/appSlice";
 import Cookies from "js-cookie";
 
@@ -11,7 +9,6 @@ const Signup = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [loginWithGoogle] = useGoogleSignInMutation();
-  const [loginWithGithub] = useGithubSignInMutation();
 
   const handleGoogleLoginSuccess = async (credentialResponse: any) => {
     try {
@@ -32,35 +29,7 @@ const Signup = () => {
       console.error("Google Login Failed:", error);
     }
   };
-
-  const handleGithubLoginSuccess = async (response: any) => {
-    try {
-      console.log("GitHub Response:", response);
-      
-      const { code } = response;
-      if (!code) throw new Error("GitHub authorization code is missing");
-  
-      console.log("Sending code to backend:", code); // ✅ Debug log
-      
-      const result = await loginWithGithub({ code }).unwrap();
-      console.log("GitHub API Response:", result);
-      
-      if (!result || !result.token || !result.user) {
-        throw new Error("Invalid response from server");
-      }
-  
-      Cookies.set("token", result.token, { expires: 7 });
-  
-      dispatch(updateCurrentUser(result.user));
-      dispatch(updateIsLoggedIn(true));
-      dispatch(updateLoginMethod("github"));
-  
-      navigate("/comments", { replace: true });
-    } catch (error) {
-      console.error("GitHub Login Failed:", error);
-    }
-  };
-  
+ 
 
   return (
     <div className="__signup grid-bg w-full h-[calc(100dvh-60px)] flex justify-center items-center flex-col">
@@ -75,24 +44,6 @@ const Signup = () => {
           onSuccess={handleGoogleLoginSuccess}
           onError={() => console.error("Google Login Failed")}
         />
-
-        {/* GitHub Login */}
-        <GitHubLogin
-        clientId={import.meta.env.VITE_GITHUB_CLIENT_ID} // Use env variable
-        onSuccess={handleGithubLoginSuccess}
-        onFailure={(error: any) => console.error("GitHub Login Failed", error)}
-        // ❌ REMOVE THIS LINE
-        redirectUri="http://localhost:5173/comments"
-        render={(props: any) => (
-          <button
-            onClick={props.onClick}
-            className="w-full py-2 px-4 flex items-center justify-center gap-2 bg-black text-white rounded-md border-2 border-gray-700"
-          >
-            <FaGithub size={20} />
-            <span>Sign up with GitHub</span>
-          </button>
-        )}
-      />
 
       </div>
     </div>

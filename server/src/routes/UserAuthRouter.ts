@@ -1,10 +1,9 @@
 import express from "express";
-import { googleSignin, githubSignin, getUserDetails, logout, searchVideos, getVideoComments, addComment, getVideoById } from "../controllers/UserController";
+import { googleSignin, getUserDetails, logout, searchVideos, getVideoComments, addComment, getVideoById } from "../controllers/UserController";
 
 export const UserAuthRouter = express.Router();
 
 UserAuthRouter.post("/googleSignin", googleSignin);
-UserAuthRouter.post("/githubSignin", githubSignin);
 UserAuthRouter.get("/user-details",getUserDetails);
 UserAuthRouter.post("/logout", logout);
 // UserAuthRouter.get("/comments/videos/search",searchVideos);

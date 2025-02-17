@@ -10,13 +10,17 @@ import pandas as pd
 import re
 import string
 import nltk
+import spacy
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.preprocessing import LabelEncoder
 from sklearn.utils import resample
+import spacy
 
+# Initialize SpaCy model
+nlp = spacy.load("en_core_web_sm")
 
 
 
@@ -41,6 +45,29 @@ def text_processing(text):
 
 
 # In[ ]:
+
+
+
+# Function to filter meaningful comments
+def is_meaningful(comment_text):
+    # Process the text using SpaCy NLP
+    doc = nlp(comment_text)
+
+    # Example check: If the comment has less than 3 tokens or too many punctuation marks, consider it meaningless
+    if len(doc) < 3 or sum([1 for token in doc if token.is_punct]) > len(doc) / 2:
+        return False  # Meaningless comment
+    return True  # Meaningful comment
+
+@app.route('/api/v1/filter-comments', methods=['POST'])
+def filter_comments():
+    data = request.get_json()
+    comments = data.get("comments", [])
+
+    # Filter out meaningless comments
+    filtered_comments = [comment for comment in comments if is_meaningful(comment)]
+
+    return jsonify({"comments": filtered_comments})
+
 
 
 @app.route('/api/v1/youtube-comments', methods=['POST'])

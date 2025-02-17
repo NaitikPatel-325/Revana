@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useGetUserDetailsQuery } from "@/redux/slices/api";
+import { setSentimentCounts } from "@/redux/slices/appSlice";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "@/redux/store";
 
 interface Comment {
   author: string;
@@ -12,12 +15,23 @@ interface CommentsProps {
   videoId: string;
 }
 
+interface SentimentCountType{
+  good:number,
+  neutral:number,
+  bad:number
+}
+
 export default function Comments({ videoId }: CommentsProps) {
   console.log("Rendering Comments Component");
 
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState<string>("");
   const { data, isSuccess } = useGetUserDetailsQuery();
+  const dispatch = useDispatch();
+
+  const TotalSentimentCount = useSelector(
+    (state: RootState) => state.appSlice.TotalSentimentCount
+  )
 
   // Ensure data is available before rendering
   if (!isSuccess || !data?.email) {
@@ -28,10 +42,11 @@ export default function Comments({ videoId }: CommentsProps) {
     const fetchComments = async () => {
       try {
         console.log(`Fetching comments for video ID: ${videoId}, User: ${data?.email}`);
-        const response = await axios.get<{ comments: Comment[] }>(
+        const response = await axios.get<{ comments: Comment[], sentimentCounts: SentimentCountType }>(
           `http://localhost:4000/user/comments/videos/${videoId}?userEmail=${data?.email}`
         );
         setComments(response.data.comments);
+        dispatch(setSentimentCounts(response.data.sentimentCounts));
       } catch (error) {
         console.error("Error fetching comments:", error);
       }
@@ -40,7 +55,7 @@ export default function Comments({ videoId }: CommentsProps) {
     if (data?.email) {
       fetchComments();
     }
-  }, [videoId, data?.email]);
+  }, [videoId, data?.email, dispatch]);
 
   const handleAddComment = async () => {
     if (!newComment.trim()) return;

@@ -27,7 +27,7 @@ export default function AllRoutes() {
         <Route path="/signup" element={<Signup />} />
         <Route path="/comments" element={<Navbar />} />
         <Route path="/comments/movies" element={<Movies />} />
-        <Route path="/comments/videos/:videoId" element={<VideoPage />} />
+        <Route path="/comments/videos/:videoId" element={<VideoPage title="Video Page" />} />
         <Route path="/comments/videos/:videoId/add-comment" element={<VideoSearch />} />
         
         

@@ -2,6 +2,10 @@ import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { useGetUserDetailsQuery } from "@/redux/slices/api";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import Comments from "./videocomments";
+import VideoPlayer from "./videoplayer";
+import VideoPage from "./videopage";
+
 
 interface Video {
   videoId: string;
@@ -34,6 +38,7 @@ export default function VideoSearch() {
       const response = await axios.get<{ video: Video }>(
         `http://localhost:4000/user/comments/videos/get-video?videoId=${videoId}`
       );
+      console.log(response);
       setSelectedVideo(response.data.video);
       setComments([]);
 
@@ -90,7 +95,7 @@ export default function VideoSearch() {
   };
 
   return (
-    <div className="p-4 w-full mx-auto text-white bg-black min-h-screen pt-16">
+    <>
       <h1 className="text-2xl font-bold mb-6 text-center text-gray-200">YouTube Video Search</h1>
 
       {!selectedVideo ? (
@@ -124,19 +129,10 @@ export default function VideoSearch() {
         </>
       ) : (
         <div className="mt-6">
-          <h2 className="text-xl font-bold mb-4 text-gray-300">{selectedVideo.title}</h2>
-          <div className="aspect-w-16 aspect-h-9">
-            <iframe
-              width="100%"
-              height="400"
-              src={`https://www.youtube.com/embed/${selectedVideo.videoId}`}
-              title="YouTube Video Player"
-              allowFullScreen
-              className="rounded-lg shadow-md"
-            ></iframe>
-          </div>
+          <VideoPage title={selectedVideo.title} />
+          
 
-          <h3 className="text-lg font-semibold mt-6 text-gray-300">Comments</h3>
+          {/*<h3 className="text-lg font-semibold mt-6 text-gray-300">Comments</h3>
           <div className="mt-2 space-y-3">
             {comments.length > 0 ? (
               comments.map((comment, index) => (
@@ -151,7 +147,8 @@ export default function VideoSearch() {
             ) : (
               <p className="text-gray-400">No comments found.</p>
             )}
-          </div>
+          </div>*/}
+
 
           <button
             onClick={() => setSelectedVideo(null)}
@@ -161,6 +158,6 @@ export default function VideoSearch() {
           </button>
         </div>
       )}
-    </div>
+    </>
   );
 }

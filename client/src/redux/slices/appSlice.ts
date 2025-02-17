@@ -53,7 +53,8 @@ const appSlice = createSlice({
     user: null,
     loginMethod: null,
     isLoggedIn: false,
-    currentWidth: window.innerWidth, // Add this if `currentWidth` is being used
+    currentWidth: window.innerWidth,
+    TotalSentimentCount: {good: 0, neutral: 0, bad: 0}
   },
   reducers: {
     updateCurrentUser: (state, action) => {
@@ -68,8 +69,11 @@ const appSlice = createSlice({
     setCurrentWidth: (state, action) => {  // ADD THIS
       state.currentWidth = action.payload;
     },
+    setSentimentCounts: (state, action) => { 
+      state.TotalSentimentCount = action.payload;
+    }
   },
 });
 
-export const { updateCurrentUser, updateIsLoggedIn, setCurrentWidth, updateLoginMethod } = appSlice.actions;
+export const { updateCurrentUser, updateIsLoggedIn, setCurrentWidth, updateLoginMethod, setSentimentCounts } = appSlice.actions;
 export default appSlice.reducer;
