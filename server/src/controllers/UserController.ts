@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 import { OAuth2Client } from "google-auth-library";
 import axios from "axios";
 import Video from "../models/Video";
+const GITHUB_REDIRECT_URI = process.env.VITE_GITHUB_REDIRECT_URI || "http://localhost:5173/comments";
 
 dotenv.config();
 
@@ -64,7 +65,6 @@ export const googleSignin = async (req: Request, res: Response) => {
   }
 };
 
-const GITHUB_REDIRECT_URI = process.env.VITE_GITHUB_REDIRECT_URI || "http://localhost:5173/comments";
 
 export const githubSignin = async (req: Request, res: Response) => {
 
@@ -251,10 +251,12 @@ export const getVideoComments = async (req: Request, res: Response) => {
       }
       return b.likeCounts - a.likeCounts; // If replies are the same, sort by likes
     });
-
     console.log("Filtered & Sorted Comments:", comments);
+    const comment = await axios.post("http://127.0.0.1:5000/api/v1/youtube-comments", { comments }); //flask Api
+ 
+    console.log("Comment:", comment);
 
-    return res.json({ comments });
+    return res.json({ comment });
   } catch (error) {
     console.error("YouTube Comments Error:", error);
     return res.status(500).json({ message: "Failed to fetch comments" });

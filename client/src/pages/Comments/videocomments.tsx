@@ -102,7 +102,7 @@ export default function Comments({ videoId }: CommentsProps) {
               <div>
                 <p className="text-sm text-gray-400">{comment.author}</p>
                 <p className="text-gray-300">{comment.text}</p>
-                <p className="text-gray-300">{comment.}</p>
+                {/* <p className="text-gray-300">{comment.}</p> */}
               </div>
             </div>
           ))}
