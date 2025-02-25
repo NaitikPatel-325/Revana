@@ -5,10 +5,8 @@ import { motion } from 'framer-motion';
 import { Bot, Key, Lock, UserCircle2 } from 'lucide-react';
 import Cookies from "js-cookie";
 import { useDispatch } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
 
 const Signup = () => {
-  const navigate = useNavigate();
   const dispatch = useDispatch();
   const [loginWithGoogle] = useGoogleSignInMutation();
 
@@ -26,7 +24,6 @@ const Signup = () => {
       dispatch(updateIsLoggedIn(true));
       dispatch(updateLoginMethod("google"));
   
-      navigate("/comments", { replace: true }); 
     } catch (error) {
       console.error("Google Login Failed:", error);
     }

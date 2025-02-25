@@ -82,10 +82,10 @@ export default function VideoSearch() {
   const handleVideoClick = async (video: Video) => {
     if (isSuccess) {
       setSelectedVideo(video);
-      dispatch(updateCurrentVideo(video));
       setComments([]);
       setNextPageToken(null);
-      navigate(`/comments/videos/?videoId=${video.videoId}`);
+  
+      navigate(`/comments/videos/?videoId=${video.videoId}`); 
 
       try {
         const response = await axios.get<{ comments: Comment[] }>(

@@ -73,7 +73,7 @@ export const googleSignin = async (req: Request, res: Response) => {
 
 
 export const getUserDetails = async (req: Request, res: Response) => {
-  const token = req.cookies.token; // ✅ Read from cookies
+  const token = req.cookies.token;
 
   if (!token) {
     return res.status(401).json({ message: "No token found" });
@@ -132,47 +132,37 @@ export const searchVideos = async (req: Request, res: Response) => {
 
 export const getVideoComments = async (req: Request, res: Response) => {
   const { videoId } = req.params;
-  const { userEmail } = req.query; // Get user email from query params
+  const { userEmail } = req.query;
 
   if (!videoId) return res.status(400).json({ message: "Video ID is required" });
 
-  console.log(`Fetching comments for video: ${videoId}`);
-
   try {
-    // ✅ Fetch user comments from the database
     let userComments: any[] = [];
     if (userEmail) {
       const user = await User.findOne({ email: userEmail.toString().toLowerCase() });
       if (user) {
-        const video = await Video.findOne({ url: new RegExp(videoId, "i") })
-  .populate({
-    path: "comments.user", // Fetch full user details
-    select: "email picture", // Explicitly fetch only email & picture
-  });
+        const video = await Video.findOne({ url: new RegExp(videoId, "i") }).populate({
+          path: "comments.user",
+          select: "email picture",
+        });
 
-if (video) {
-  userComments = video.comments
-    .filter((comment) => {
-      if (comment.user && typeof comment.user !== "string") {
-        return (comment.user as any).email === userEmail; // Ensure we compare email correctly
-      }
-      return false;
-    })
-    .map((comment) => ({
-      author: (comment.user as any).email, // Extract user email
-      text: comment.text,
-      profileImage: (comment.user as any).picture || "/default-avatar.png", // Fetch user's profile image
-      sentiment: (comment as any).sentiment || 1, // Ensure sentiment is handled properly
-      sentimentText: comment.text,
-    }));
-}
+        if (video) {
+          userComments = video.comments
+            .filter((comment) => comment.user && (comment.user as any).email === userEmail)
+            .map((comment) => ({
+              author: (comment.user as any).email,
+              text: comment.text,
+              profileImage: (comment.user as any).picture || "/default-avatar.png",
+              sentiment: (comment as any).sentiment || 1, 
+              sentimentText: comment.text,
+            }));
+        }
       }
     }
 
-    // ✅ Fetch YouTube comments
     const API_KEY = process.env.VITE_YOUTUBE_API_KEY;
     const ytResponse = await axios.get(
-      `https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId=${videoId}&maxResults=400&key=${API_KEY}`
+      `https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId=${videoId}&maxResults=100&key=${API_KEY}`
     );
 
     let ytComments = ytResponse.data.items.map((item: any) => ({
@@ -183,48 +173,25 @@ if (video) {
       totalReplyCount: item.snippet.totalReplyCount,
     }));
 
-    // ✅ Filter spam & irrelevant comments via Flask API
-    const flaskResponse = await axios.post("http://127.0.0.1:5000/api/v1/filter-comments", {
+    if (!ytComments.length) return res.json({ comments: userComments, sentimentCounts: { good: 0, neutral: 0, bad: 0 } });
+
+    const flaskResponse = await axios.post("http://127.0.0.1:5000/api/v1/youtube-comments", {
       comments: ytComments.map((comment: any) => comment.text),
     });
 
-    const filteredComments = flaskResponse.data.comments;
-    ytComments = ytComments.filter((comment: any) => filteredComments.includes(comment.text));
-
-    // ✅ Additional filtering (remove emojis & timestamps)
-    ytComments = ytComments.filter((comment: any) => {
-      const containsEmoji = /[\p{Emoji_Presentation}\p{Emoji}\u2000-\u3300]/gu.test(comment.text);
-      const onlyTimestamp = /<a href=.*>\d{1,2}:\d{2}<\/a>/.test(comment.text);
-      return !containsEmoji && !onlyTimestamp;
-    });
-
-    // ✅ Sort YouTube comments: First by replies, then by likes
-    ytComments.sort((a: any, b: any) => {
-      if (b.totalReplyCount !== a.totalReplyCount) return b.totalReplyCount - a.totalReplyCount;
-      return b.likeCounts - a.likeCounts;
-    });
-
-    // ✅ Sentiment Analysis for YouTube comments
-    const sentimentResponse = await axios.post("http://127.0.0.1:5000/api/v1/youtube-comments", {
-      comments: ytComments.map((comment: any) => comment.text),
-    });
-
-    if (!sentimentResponse.data.comments) {
+    if (!flaskResponse.data.comments) {
       return res.status(500).json({ message: "Error in sentiment analysis" });
     }
 
-    // ✅ Attach sentiment analysis results to YouTube comments
-    const ytCommentsWithSentiment = ytComments.map((comment: any, index: any) => ({
+    const ytCommentsWithSentiment = ytComments.map((comment: any, index: number) => ({
       ...comment,
-      sentiment: sentimentResponse.data.comments[index].Sentiment,
-      sentimentText: sentimentResponse.data.comments[index].Comment,
+      sentiment: flaskResponse.data.comments[index].Sentiment,
+      sentimentText: flaskResponse.data.comments[index].Comment,
     }));
 
-    // ✅ Final comment list: User comments first, then YouTube comments
     const allComments = [...userComments, ...ytCommentsWithSentiment];
 
-    // ✅ Compute sentiment counts
-    const sentimentCounts: SentimentCountType = {
+    const sentimentCounts = {
       good: allComments.filter((comment: any) => comment.sentiment === 2).length,
       neutral: allComments.filter((comment: any) => comment.sentiment === 1).length,
       bad: allComments.filter((comment: any) => comment.sentiment === 0).length,
@@ -236,6 +203,7 @@ if (video) {
     return res.status(500).json({ message: "Failed to fetch comments" });
   }
 };
+
 
 // export const getVideoComments = async (req: Request, res: Response) => {
 //   const { videoId } = req.params;
@@ -345,33 +313,30 @@ export const addComment = async (req: Request, res: Response) => {
   }
 
   try {
-    // **1️⃣ Find the User ObjectId from Email**
     const user = await User.findOne({ email: userEmail });
     if (!user) {
       console.log(`⚠️ No user found with email: ${userEmail}`);
       return res.status(404).json({ message: "User not found" });
     }
 
-    const userId = user._id; // Get MongoDB ObjectId
+    const userId = user._id;
 
-    // **2️⃣ Find or Create the Video**
     let video = await Video.findOne({ url: new RegExp(videoUrl, "i") });
 
     if (!video) {
       console.log(`⚠️ Video not found, creating new entry for URL: ${videoUrl}`);
 
       video = new Video({
-        title: title, // Default title,
+        title: title && title.trim() !== "" ? title : "Untitled Video",
         thumbnail: thumbnail,
         url: videoUrl,
-        uploadedBy: userId, // Assigning the user as uploader
-        comments: [], // Initialize comments array
+        uploadedBy: userId,
+        comments: [],
       });
 
       await video.save();
     }
 
-    // **3️⃣ Add the Comment**
     const newComment = {
       user: userId,
       text: commentText,
@@ -387,6 +352,7 @@ export const addComment = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
 
 export const getVideoById = async (req: Request, res: Response) => {
   const { videoId } = req.query;

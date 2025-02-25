@@ -90,4 +90,3 @@ if __name__ == '__main__':
 
 with open('sentiment_analyzer.pkl', 'wb') as file:
     pickle.dump(sentiments, file)
-

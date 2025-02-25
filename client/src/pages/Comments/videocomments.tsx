@@ -4,7 +4,6 @@ import { useGetUserDetailsQuery } from "@/redux/slices/api";
 import { setSentimentCounts } from "@/redux/slices/appSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
-import { Skeleton } from "@/components/ui/skeleton";
 import { motion, AnimatePresence } from "framer-motion";
 import { Send } from "lucide-react";
 import {
@@ -12,7 +11,6 @@ import {
   PaginationContent,
   PaginationItem,
   PaginationLink,
-  PaginationEllipsis,
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
@@ -22,7 +20,7 @@ interface Comment {
   text: string;
   profileImage: string;
   sentiment: number;
-  SentimentText: string;
+  sentimentText: string;
 }
 
 interface CommentsProps {
@@ -39,24 +37,16 @@ export default function Comments({ videoId }: CommentsProps) {
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState<string>("");
   const [currentPage, setCurrentPage] = useState(1);
-  const commentsPerPage = 5; // Number of comments per page
+  const commentsPerPage = 5;
 
   const { data, isSuccess } = useGetUserDetailsQuery();
   const dispatch = useDispatch();
-
   const videodata = useSelector((state: RootState) => state.appSlice.videodata);
-
-  if (!isSuccess || !data?.email) {
-    return <p className="text-gray-400">Loading comments...</p>;
-  }
 
   useEffect(() => {
     const fetchComments = async () => {
       try {
-        const response = await axios.get<{
-          comments: Comment[];
-          sentimentCounts: SentimentCountType;
-        }>(
+        const response = await axios.get<{ comments: Comment[]; sentimentCounts: SentimentCountType }>(
           `http://localhost:4000/user/comments/videos/${videoId}?userEmail=${data?.email}`
         );
         setComments(response.data.comments);
@@ -91,11 +81,11 @@ export default function Comments({ videoId }: CommentsProps) {
       );
 
       const newCommentObj: Comment = {
-        author: data?.email,
+        author: data?.email as string,
         text: newComment,
         profileImage: "",
         sentiment: 1,
-        SentimentText: newComment,
+        sentimentText: newComment,
       };
 
       setNewComment("");
@@ -112,18 +102,46 @@ export default function Comments({ videoId }: CommentsProps) {
     }
   };
 
-  // Pagination logic
   const totalPages = Math.ceil(comments.length / commentsPerPage);
   const indexOfLastComment = currentPage * commentsPerPage;
   const indexOfFirstComment = indexOfLastComment - commentsPerPage;
   const currentComments = comments.slice(indexOfFirstComment, indexOfLastComment);
 
-  const getPageNumbers = () => {
-    const pageNumbers = [];
-    for (let i = 1; i <= totalPages; i++) {
-      pageNumbers.push(i);
+  const getSentimentLabel = (sentiment: number) => {
+    switch (sentiment) {
+      case 2:
+        return {
+          text: "Positive",
+          color: "bg-gradient-to-r from-green-400 to-green-600",
+          textColor: "text-green-50",
+          ringColor: "ring-green-400/30",
+          iconEmoji: "🌟"
+        };
+      case 1:
+        return {
+          text: "Neutral",
+          color: "bg-gradient-to-r from-yellow-400 to-yellow-600",
+          textColor: "text-yellow-50",
+          ringColor: "ring-yellow-400/30",
+          iconEmoji: "⚖️"
+        };
+      case 0:
+        return {
+          text: "Negative",
+          color: "bg-gradient-to-r from-red-400 to-red-600",
+          textColor: "text-red-50",
+          ringColor: "ring-red-400/30",
+          iconEmoji: "⚠️"
+        };
+      default:
+        return {
+          text: "Unknown",
+          color: "bg-gradient-to-r from-gray-400 to-gray-600",
+          textColor: "text-gray-50",
+          ringColor: "ring-gray-400/30",
+          iconEmoji: "❔"
+        };
     }
-    return pageNumbers;
   };
 
   return (
@@ -164,61 +182,86 @@ export default function Comments({ videoId }: CommentsProps) {
           <>
             <div className="space-y-4">
               <AnimatePresence mode="wait">
-                {currentComments.map((comment, index) => (
-                  <motion.div
-                    key={indexOfFirstComment + index}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    transition={{
-                      duration: 0.3,
-                      delay: index * 0.05,
-                      ease: "easeOut",
-                    }}
-                    className="flex items-start space-x-4 bg-gray-800/50 p-4 rounded-xl border border-gray-700/50 hover:border-purple-500/30 transition-all duration-300 hover:transform hover:scale-[1.02]"
-                  >
-                    <img
-                      src={comment.profileImage || "/default-avatar.png"}
-                      alt="Profile"
-                      className="w-10 h-10 rounded-full object-cover"
-                    />
-                    <div className="flex-1">
-                      <p className="text-sm text-gray-400 mb-1">{comment.author}</p>
-                      <p className="text-gray-200">{comment.text}</p>
-                    </div>
-                  </motion.div>
-                ))}
+                {currentComments.map((comment, index) => {
+                  const sentiment = getSentimentLabel(comment.sentiment);
+                  return (
+                    <motion.div
+                      key={indexOfFirstComment + index}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      transition={{ duration: 0.3, delay: index * 0.05, ease: "easeOut" }}
+                      className="bg-gray-800/50 p-4 rounded-xl border border-gray-700/50 hover:border-purple-500/30 transition-all duration-300 hover:transform hover:scale-[1.02]"
+                    >
+                      <div className="flex items-start space-x-4">
+                        <img
+                          src={comment.profileImage || "/default-avatar.png"}
+                          alt="Profile"
+                          className="w-10 h-10 rounded-full object-cover"
+                        />
+                        <div className="flex-1 space-y-2">
+                          <p className="text-sm text-gray-400">{comment.author}</p>
+                          <div className="relative bg-gray-700/30 rounded-lg p-3">
+                            <p className="text-gray-200">{comment.text}</p>
+                            <motion.div
+                              initial={{ scale: 0.9, opacity: 0 }}
+                              animate={{ scale: 1, opacity: 1 }}
+                              className="absolute -top-2 right-2"
+                            >
+                              <motion.span
+                                  whileHover={{ scale: 1.1 }}
+                                  className={`inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-mono font-semibold ${sentiment.color} ${sentiment.textColor} ring-2 ${sentiment.ringColor} shadow-lg transition-all duration-300`}
+                                >
+                                  <span className="mr-2 text-lg">{sentiment.iconEmoji}</span>
+                                  <span>{sentiment.text}</span>
+                              </motion.span>
+
+                            </motion.div>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  );
+                })}
               </AnimatePresence>
             </div>
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <Pagination>
-                <PaginationContent>
-                  <PaginationItem>
-                    <PaginationPrevious
-                      onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                      disabled={currentPage === 1}
-                    />
-                  </PaginationItem>
-                  {getPageNumbers().map((pageNum) => (
-                    <PaginationItem key={pageNum}>
-                      <PaginationLink
-                        onClick={() => setCurrentPage(pageNum)}
-                        isActive={currentPage === pageNum}
-                      >
-                        {pageNum}
-                      </PaginationLink>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+                className="mt-6"
+              >
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious
+                        onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                        className={`transition-all duration-300 ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'}`}
+                      />
                     </PaginationItem>
-                  ))}
-                  <PaginationItem>
-                    <PaginationNext
-                      onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                      disabled={currentPage === totalPages}
-                    />
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
+                    {[...Array(totalPages)].map((_, i) => (
+                      <PaginationItem key={i}>
+                        <PaginationLink
+                          onClick={() => setCurrentPage(i + 1)}
+                          isActive={currentPage === i + 1}
+                          className="transition-all duration-300 hover:scale-105"
+                        >
+                          {i + 1}
+                        </PaginationLink>
+                      </PaginationItem>
+                    ))}
+                    <PaginationItem>
+                      <PaginationNext
+                        onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                        className={`transition-all duration-300 ${currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'}`}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              </motion.div>
             )}
           </>
         )}
