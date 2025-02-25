@@ -35,7 +35,7 @@ const UserSchema = new Schema<IUserSchema>(
     providerId: {
       type: String,
       required: true,
-      unique: true, // Ensures one user per provider ID
+      unique: true,
     },
   },
   { timestamps: true }

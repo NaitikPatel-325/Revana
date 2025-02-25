@@ -10,12 +10,6 @@ export default function CommentHeader() {
 
         {/* Navigation Links */}
         <div className="space-x-6">
-          <Link to="/comments/movies" className="text-white hover:text-gray-200">
-            Movies
-          </Link>
-          <Link to="/comments/food" className="text-white hover:text-gray-200">
-            Food
-          </Link>
           <Link to="/comments/videos" className="text-white hover:text-gray-200">
             Videos
           </Link>

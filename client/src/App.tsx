@@ -1,25 +1,25 @@
 import { Toaster } from "sonner";
 import "./App.css";
-import { ThemeProvider } from "./components/theme-provider";
 import Header from "./Header";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import AllRoutes from "./AllRoutes";
 import { useEffect } from "react";
-import Cookies from "js-cookie";
 import { useGetUserDetailsQuery } from "@/redux/slices/api";
 import { useDispatch } from "react-redux";
 import { updateCurrentUser, updateIsLoggedIn } from "@/redux/slices/appSlice";
+import { InteractiveGridPattern } from "./components/magicui/interactive-grid-pattern";
+import { cn } from "@/lib/utils";
+import { ThemeProvider } from "./components/theme-provider";
 
 function App() {
 
-   const dispatch = useDispatch();
+  const dispatch = useDispatch();
 
-  // ✅ Fetch user details from backend instead of checking cookies manually
   const { data, isSuccess } = useGetUserDetailsQuery();
 
   useEffect(() => {
     if (isSuccess && data) {
-      dispatch(updateCurrentUser(data)); // ✅ Backend should return user details
+      dispatch(updateCurrentUser(data));
       dispatch(updateIsLoggedIn(true));
     }
   }, [data, isSuccess, dispatch]);

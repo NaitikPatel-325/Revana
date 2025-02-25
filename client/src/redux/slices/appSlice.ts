@@ -54,7 +54,13 @@ const appSlice = createSlice({
     loginMethod: null,
     isLoggedIn: false,
     currentWidth: window.innerWidth,
-    TotalSentimentCount: {good: 0, neutral: 0, bad: 0}
+    TotalSentimentCount: {good: 0, neutral: 0, bad: 0},
+    videodata: {
+    channel: "",
+    thumbnail: "",
+    title: "",
+    videoId: undefined   
+    }
   },
   reducers: {
     updateCurrentUser: (state, action) => {
@@ -71,9 +77,13 @@ const appSlice = createSlice({
     },
     setSentimentCounts: (state, action) => { 
       state.TotalSentimentCount = action.payload;
+    },
+    updateCurrentVideo: (state, action) => {
+      console.log("Video-data action-payload : ",action.payload);
+      state.videodata = action.payload;
     }
   },
 });
 
-export const { updateCurrentUser, updateIsLoggedIn, setCurrentWidth, updateLoginMethod, setSentimentCounts } = appSlice.actions;
+export const { updateCurrentUser, updateIsLoggedIn, setCurrentWidth, updateLoginMethod, setSentimentCounts,updateCurrentVideo } = appSlice.actions;
 export default appSlice.reducer;

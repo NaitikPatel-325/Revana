@@ -7,7 +7,6 @@ const Home = lazy(() => import("./components/Home"));
 const Signup = lazy(() => import("./pages/Signup"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Navbar = lazy(()=> import("./pages/Comments/comments"))
-const Movies = lazy(()=> import("./pages/Comments/movies"))
 const VideoPage = lazy(()=> import("./pages/Comments/videopage"))
 const VideoSearch = lazy(()=> import("./pages/Comments/videos"))
 
@@ -26,7 +25,6 @@ export default function AllRoutes() {
         {/* <Route path="/login" element={<Login />} /> */}
         <Route path="/signup" element={<Signup />} />
         <Route path="/comments" element={<Navbar />} />
-        <Route path="/comments/movies" element={<Movies />} />
         <Route path="/comments/videos/:videoId" element={<VideoPage title="Video Page" />} />
         <Route path="/comments/videos/:videoId/add-comment" element={<VideoSearch />} />
         

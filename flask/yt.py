@@ -89,7 +89,7 @@ def process_comments():
 
     sentiment = []
     for score in df["Compound"]:
-        if score >= 0.05:
+        if score >= 0.04:
             sentiment.append('Positive')
         elif score <= -0.05:
             sentiment.append('Negative')

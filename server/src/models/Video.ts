@@ -17,15 +17,6 @@ const videoSchema = new mongoose.Schema(
       type: String,
       default: "https://img.youtube.com/vi/default.jpg",
     },
-    description: {
-      type: String,
-      trim: true,
-    },
-    category: {
-      type: String,
-      required: true,
-      trim: true,
-    },
     uploadedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -49,10 +40,6 @@ const videoSchema = new mongoose.Schema(
         },
       },
     ],
-    views: {
-      type: Number,
-      default: 0,
-    },
     likes: [
       {
         user: {
