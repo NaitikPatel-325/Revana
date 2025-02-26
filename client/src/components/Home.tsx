@@ -11,7 +11,7 @@ export default function Home() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setGlow(true);
-    }, 1500);
+    }, 1000); // Reduced delay for faster initial glow
 
     return () => clearTimeout(timer);
   }, []);
@@ -20,17 +20,20 @@ export default function Home() {
     {
       icon: <Brain className="w-6 h-6" />,
       title: "Sentiment Analysis",
-      description: "Analyze comments with advanced AI"
+      description: "Analyze comments with advanced AI",
+      gradient: "from-purple-500 to-indigo-500"
     },
     {
       icon: <MessageSquare className="w-6 h-6" />,
       title: "Real-time Comments",
-      description: "Engage with videos instantly"
+      description: "Engage with videos instantly",
+      gradient: "from-pink-500 to-rose-500"
     },
     {
       icon: <Bot className="w-6 h-6" />,
       title: "Smart Insights",
-      description: "Get AI-powered engagement metrics"
+      description: "Get AI-powered engagement metrics",
+      gradient: "from-cyan-500 to-blue-500"
     }
   ];
 
@@ -39,64 +42,88 @@ export default function Home() {
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.2
+        staggerChildren: 0.15,
+        delayChildren: 0.3
       }
     }
   };
 
   const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
+    hidden: { y: 40, opacity: 0, rotateX: -45 },
     visible: {
       y: 0,
-      opacity: 1
+      opacity: 1,
+      rotateX: 0,
+      transition: {
+        type: "spring",
+        stiffness: 150,
+        damping: 15
+      }
     }
   };
 
   return (
-    <div className="min-h-[calc(100dvh-60px)] text-white">
+    <div className="min-h-[calc(100dvh-60px)] text-white perspective-1000">
       {/* Hero Section */}
-      <div className="relative h-screen flex flex-col justify-center items-center">
+      <div className="relative h-screen flex flex-col justify-center items-center overflow-hidden">
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="absolute inset-0 pointer-events-none"
+          initial={{ opacity: 0, scale: 0.9, rotateY: -45 }}
+          animate={{ opacity: 1, scale: 1, rotateY: 0 }}
+          transition={{ duration: 1.5, type: "spring", bounce: 0.4 }}
+          className="absolute inset-0 pointer-events-none transform-style-3d"
         >
-          <div className="absolute inset-0 bg-gradient-to-b from-purple-500/10 to-transparent" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.1)_0%,transparent_100%)]" />
+          <div className="absolute inset-0 bg-gradient-to-b from-purple-500/20 via-pink-500/10 to-transparent" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.15)_0%,transparent_100%)]" />
         </motion.div>
 
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="text-center z-10"
+          initial={{ opacity: 0, z: -200 }}
+          animate={{ opacity: 1, z: 0 }}
+          transition={{ duration: 1.2, type: "spring", bounce: 0.3 }}
+          className="text-center z-10 transform-style-3d"
         >
-          <h1 className="text-6xl font-bold mb-6">
+          <h1 className="text-8xl font-bold mb-8 perspective-1000">
             {letters.map((letter, index) => (
-              <span
+              <motion.span
                 key={index}
-                className={`letter ${glow ? 'glow' : ''}`}
-                style={{
-                  animationDelay: `${index * 100}ms`,
+                className={`letter inline-block ${glow ? 'glow' : ''}`}
+                initial={{ opacity: 0, rotateY: -180, scale: 0.5 }}
+                animate={{ opacity: 1, rotateY: 0, scale: 1 }}
+                transition={{ 
+                  delay: index * 0.1,
+                  duration: 1.2,
+                  type: "spring",
+                  bounce: 0.4
+                }}
+                whileHover={{
+                  scale: 1.4,
+                  rotateY: 360,
+                  color: "#A855F7",
+                  transition: { duration: 0.6, type: "spring" }
                 }}
               >
                 {letter}
-              </span>
+              </motion.span>
             ))}
           </h1>
-          <p className="text-xl text-gray-400 mb-8 animated-text">
+          <motion.p 
+            className="text-3xl text-gray-300 mb-10 animated-text font-light"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8, duration: 1, type: "spring" }}
+          >
             Advanced Semantic Analysis Platform
-          </p>
+          </motion.p>
           <motion.div
-            whileHover={{ scale: 1.05 }}
+            whileHover={{ scale: 1.1, rotateY: 15 }}
             whileTap={{ scale: 0.95 }}
+            style={{ transformStyle: "preserve-3d" }}
           >
             <Link 
               to="/signup" 
-              className="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-700 px-6 py-3 rounded-full font-medium transition-colors duration-300"
+              className="inline-flex items-center gap-3 bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 px-10 py-5 rounded-full font-semibold text-lg transition-all duration-500 shadow-[0_0_25px_rgba(168,85,247,0.5)] hover:shadow-[0_0_40px_rgba(168,85,247,0.7)] hover:bg-gradient-to-r hover:from-pink-600 hover:via-purple-600 hover:to-pink-600"
             >
-              Get Started <ArrowRight className="w-4 h-4" />
+              Get Started <ArrowRight className="w-6 h-6 animate-[bounce-x_1s_ease-in-out_infinite]" />
             </Link>
           </motion.div>
         </motion.div>
@@ -104,14 +131,22 @@ export default function Home() {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 1 }}
-          className="absolute bottom-10 left-1/2 -translate-x-1/2"
+          transition={{ delay: 1.2 }}
+          className="absolute bottom-12 left-1/2 -translate-x-1/2"
         >
           <motion.div
-            animate={{ y: [0, 10, 0] }}
-            transition={{ duration: 1.5, repeat: Infinity }}
+            animate={{ 
+              y: [0, 15, 0],
+              rotateY: [0, 360],
+              scale: [1, 1.2, 1]
+            }}
+            transition={{ 
+              duration: 2,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
           >
-            <Sparkles className="w-6 h-6 text-purple-400" />
+            <Sparkles className="w-10 h-10 text-purple-400" />
           </motion.div>
         </motion.div>
       </div>
@@ -121,52 +156,75 @@ export default function Home() {
         variants={containerVariants}
         initial="hidden"
         whileInView="visible"
-        viewport={{ once: true }}
-        className="max-w-6xl mx-auto px-4 py-20"
+        viewport={{ once: true, margin: "-100px" }}
+        className="max-w-7xl mx-auto px-6 py-24"
       >
         <motion.h2 
           variants={itemVariants}
-          className="text-3xl font-bold text-center mb-12 bg-gradient-to-r from-purple-400 to-pink-600 bg-clip-text text-transparent"
+          className="text-5xl font-bold text-center mb-20 bg-gradient-to-r from-purple-400 via-pink-500 to-purple-600 bg-clip-text text-transparent"
         >
           Powerful Features
         </motion.h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-16">
           {features.map((feature, index) => (
             <motion.div
               key={index}
               variants={itemVariants}
-              whileHover={{ y: -5 }}
-              className="p-6 rounded-xl bg-gray-900/50 border border-gray-800 backdrop-blur-sm"
+              whileHover={{ 
+                scale: 1.05,
+                rotateY: 15,
+                z: 50,
+                transition: { duration: 0.4 }
+              }}
+              style={{ 
+                transformStyle: "preserve-3d",
+                perspective: "1500px"
+              }}
+              className="p-10 rounded-3xl bg-gradient-to-b from-gray-900/90 to-gray-900/50 border border-gray-800/50 backdrop-blur-xl shadow-[0_0_25px_rgba(0,0,0,0.3)] hover:shadow-[0_0_40px_rgba(168,85,247,0.3)] transition-all duration-700"
             >
-              <div className="w-12 h-12 rounded-lg bg-purple-500/20 flex items-center justify-center mb-4">
+              <motion.div 
+                className={`w-20 h-20 rounded-2xl bg-gradient-to-br ${feature.gradient} bg-opacity-20 flex items-center justify-center mb-8`}
+                whileHover={{ 
+                  rotateY: 180,
+                  scale: 1.1,
+                  transition: { duration: 0.6 }
+                }}
+              >
                 {feature.icon}
-              </div>
-              <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
-              <p className="text-gray-400">{feature.description}</p>
+              </motion.div>
+              <h3 className="text-2xl font-semibold mb-4 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">{feature.title}</h3>
+              <p className="text-gray-300 text-lg leading-relaxed">{feature.description}</p>
             </motion.div>
           ))}
         </div>
       </motion.div>
 
-      {/* Floating Particles */}
-      <div className="fixed inset-0 pointer-events-none">
-        {[...Array(20)].map((_, i) => (
+      {/* Enhanced Floating Particles */}
+      <div className="fixed inset-0 pointer-events-none perspective-1000">
+        {[...Array(40)].map((_, i) => (
           <motion.div
             key={i}
-            className="absolute w-2 h-2 bg-purple-500/20 rounded-full"
+            className="absolute w-3 h-3 rounded-full"
+            style={{
+              background: `radial-gradient(circle at center, ${
+                i % 3 === 0 ? '#A855F7' : i % 3 === 1 ? '#EC4899' : '#3B82F6'
+              }30, transparent)`,
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              transformStyle: "preserve-3d"
+            }}
             animate={{
               x: ["0%", "100%", "0%"],
               y: ["0%", "100%", "0%"],
+              z: [-150, 150, -150],
+              scale: [1, 2.5, 1],
+              opacity: [0.2, 0.6, 0.2]
             }}
             transition={{
-              duration: Math.random() * 10 + 20,
+              duration: Math.random() * 25 + 15,
               repeat: Infinity,
-              ease: "linear",
-              delay: -Math.random() * 20,
-            }}
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
+              ease: "easeInOut",
+              delay: -Math.random() * 25,
             }}
           />
         ))}

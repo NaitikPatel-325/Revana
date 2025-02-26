@@ -9,6 +9,7 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const Navbar = lazy(()=> import("./pages/Comments/comments"))
 const VideoPage = lazy(()=> import("./pages/Comments/videopage"))
 const VideoSearch = lazy(()=> import("./pages/Comments/videos"))
+const Fashion = lazy(()=> import("./pages/Comments/fashion"))
 
 
 export default function AllRoutes() {
@@ -30,6 +31,9 @@ export default function AllRoutes() {
         
         
         <Route path="/comments/videos/" element={<VideoSearch />} />
+
+        <Route path="/comments/fashion" element={<Fashion/>} />
+
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Suspense>
