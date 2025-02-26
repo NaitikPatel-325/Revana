@@ -1,5 +1,4 @@
 import { Toaster } from "sonner";
-import "./App.css";
 import Header from "./Header";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import AllRoutes from "./AllRoutes";
@@ -7,8 +6,6 @@ import { useEffect } from "react";
 import { useGetUserDetailsQuery } from "@/redux/slices/api";
 import { useDispatch } from "react-redux";
 import { updateCurrentUser, updateIsLoggedIn } from "@/redux/slices/appSlice";
-import { InteractiveGridPattern } from "./components/magicui/interactive-grid-pattern";
-import { cn } from "@/lib/utils";
 import { ThemeProvider } from "./components/theme-provider";
 
 function App() {

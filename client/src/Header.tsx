@@ -29,15 +29,15 @@ export default function Header() {
   const navItems = [
     {
       title: "Videos",
-      path: "/comments/videos",
+      path: "/comments/videos", 
       icon: <Video className="w-5 h-5" />,
-      color: "from-purple-600 to-blue-600",
+      color: "from-violet-600 to-indigo-600",
     },
     {
       title: "Fashion",
       path: "/comments/fashion",
       icon: <ShoppingBag className="w-5 h-5" />,
-      color: "from-pink-600 to-purple-600",
+      color: "from-fuchsia-600 to-violet-600",
     },
   ];
 
@@ -76,13 +76,15 @@ export default function Header() {
   };
 
   const navVariants = {
-    hidden: { y: -100 },
+    hidden: { y: -100, opacity: 0 },
     visible: { 
       y: 0,
+      opacity: 1,
       transition: {
         type: "spring",
         stiffness: 100,
-        damping: 20
+        damping: 20,
+        duration: 0.8
       }
     }
   };
@@ -96,7 +98,7 @@ export default function Header() {
   };
 
   const renderNavigationItems = () => (
-    <div className="hidden md:flex items-center space-x-6">
+    <div className="hidden md:flex items-center space-x-8">
       {navItems.map((item) => {
         const isActive = location.pathname === item.path;
         return (
@@ -107,26 +109,26 @@ export default function Header() {
               whileTap={{ scale: 0.95 }}
             >
               <div
-                className={`absolute inset-0 bg-gradient-to-r ${item.color} rounded-lg blur opacity-0 group-hover:opacity-75 transition duration-300`}
+                className={`absolute inset-0 bg-gradient-to-r ${item.color} rounded-xl blur-lg opacity-0 group-hover:opacity-50 transition-all duration-500`}
               ></div>
               <motion.div
-                className={`relative px-6 py-3 rounded-lg flex items-center space-x-2 ${
+                className={`relative px-6 py-3 rounded-xl flex items-center space-x-3 backdrop-blur-sm ${
                   isActive
-                    ? "bg-gradient-to-r " + item.color + " text-white"
-                    : "bg-gray-800 text-gray-300 hover:text-white"
+                    ? "bg-gradient-to-r " + item.color + " text-white shadow-lg shadow-indigo-500/20"
+                    : "bg-gray-800/40 text-gray-300 hover:text-white border border-gray-700"
                 } transform perspective-1000`}
                 whileHover={{
                   rotateX: 5,
                   rotateY: 5,
-                  transition: { duration: 0.3 },
+                  transition: { duration: 0.4 },
                 }}
               >
                 {item.icon}
-                <span className="font-medium">{item.title}</span>
+                <span className="font-medium tracking-wide">{item.title}</span>
                 {isActive && (
                   <motion.div
                     layoutId="active"
-                    className="absolute inset-0 rounded-lg bg-gradient-to-r from-white/10 to-transparent"
+                    className="absolute inset-0 rounded-xl bg-gradient-to-r from-white/20 to-transparent"
                     initial={false}
                     transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                   />
@@ -144,13 +146,13 @@ export default function Header() {
       initial="hidden"
       animate="visible"
       variants={navVariants}
-      className={`fixed top-0 left-0 w-full backdrop-blur-md z-50 transition-all duration-300 ${
+      className={`fixed top-0 left-0 w-full backdrop-blur-xl z-50 transition-all duration-500 ${
         isScrolled 
-          ? "bg-gray-900/90 shadow-lg" 
-          : "bg-gray-900/50"
+          ? "bg-gray-900/95 shadow-2xl shadow-black/20" 
+          : "bg-gray-900/30"
       }`}
     >
-      <div className="max-w-7xl mx-auto px-4 py-3">
+      <div className="max-w-7xl mx-auto px-6 py-4">
         <div className="flex justify-between items-center">
           {/* Logo */}
           <Link to="/">
@@ -159,11 +161,11 @@ export default function Header() {
               whileTap={{ scale: 0.95 }}
               className="relative group"
             >
-              <h2 className="font-bold text-xl bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-600 select-none">
+              <h2 className="font-bold text-2xl bg-clip-text text-transparent bg-gradient-to-r from-violet-400 via-fuchsia-500 to-indigo-500 select-none tracking-tight">
                 Revana
               </h2>
               <motion.div
-                className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-400 to-pink-600 group-hover:w-full transition-all duration-300"
+                className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-violet-400 via-fuchsia-500 to-indigo-500 group-hover:w-full transition-all duration-500"
                 whileHover={{ width: "100%" }}
               />
             </motion.div>
@@ -175,19 +177,18 @@ export default function Header() {
           {/* Auth Buttons */}
           {windowWidth > 500 ? (
             <motion.div 
-              className="flex items-center gap-4"
+              className="flex items-center gap-6"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2 }}
+              transition={{ delay: 0.3 }}
             >
               {isLoggedIn ? (
                 <>
-                
                 <motion.div variants={buttonVariants} whileHover="hover" whileTap="tap">
                   <Button 
                     onClick={handleLogout}
                     variant="destructive"
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-3 px-6 py-5 rounded-xl shadow-lg shadow-red-500/20"
                   >
                     <LogOut size={18} />
                     Logout
@@ -198,7 +199,7 @@ export default function Header() {
                 <motion.div variants={buttonVariants} whileHover="hover" whileTap="tap">
                   <Link to="/signup">
                     <Button 
-                      className="bg-purple-600 hover:bg-purple-700 transition-colors duration-300"
+                      className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 px-8 py-5 rounded-xl shadow-lg shadow-indigo-500/30 transition-all duration-300"
                     >
                       Sign up
                     </Button>
@@ -210,19 +211,19 @@ export default function Header() {
             <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
               <SheetTrigger asChild>
                 <motion.div whileHover="hover" whileTap="tap" variants={buttonVariants}>
-                  <Button variant="ghost" size="icon">
+                  <Button variant="ghost" size="icon" className="bg-gray-800/40 rounded-xl">
                     <Menu className="h-5 w-5" />
                   </Button>
                 </motion.div>
               </SheetTrigger>
               <SheetContent 
                 side="right" 
-                className="w-[300px] bg-gray-900/95 backdrop-blur-lg border-gray-800"
+                className="w-[300px] bg-gray-900/95 backdrop-blur-xl border-gray-800"
               >
                 <motion.div
                   initial={{ opacity: 0, x: 50 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.1 }}
+                  transition={{ delay: 0.2 }}
                 >
                   <div className="flex flex-col gap-6 mt-8">                    
                     {isLoggedIn ? (
@@ -230,7 +231,7 @@ export default function Header() {
                         <Button
                           onClick={handleLogout}
                           variant="destructive"
-                          className="w-full flex items-center gap-2 justify-center"
+                          className="w-full flex items-center gap-3 justify-center py-6 rounded-xl shadow-lg shadow-red-500/20"
                         >
                           <LogOut size={18} />
                           Logout
@@ -240,7 +241,7 @@ export default function Header() {
                       <motion.div whileHover="hover" whileTap="tap" variants={buttonVariants}>
                         <Link to="/signup" className="block w-full">
                           <Button 
-                            className="w-full bg-purple-600 hover:bg-purple-700 transition-colors duration-300"
+                            className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 py-6 rounded-xl shadow-lg shadow-indigo-500/30 transition-all duration-300"
                           >
                             Sign up
                           </Button>

@@ -106,51 +106,61 @@ export default function VideoSearch() {
 
   return (
     <motion.div 
-      initial={{ opacity: 0 }} 
-      animate={{ opacity: 1 }} 
-      transition={{ duration: 0.5 }}
-      className="max-w-7xl mx-auto px-4 py-8"
+      initial={{ opacity: 0, rotateX: -20 }} 
+      animate={{ opacity: 1, rotateX: 0 }} 
+      transition={{ duration: 0.8, type: "spring" }}
+      className="max-w-7xl mx-auto px-4 py-8 perspective-1000 mt-[60px]"
     >
       <motion.h1 
-        className="text-4xl font-bold mb-8 text-center bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-600"
-        initial={{ y: -20 }}
-        animate={{ y: 0 }}
-        transition={{ duration: 0.5, delay: 0.2 }}
+        className="text-5xl font-bold mb-12 text-center bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-pink-500 to-purple-600"
+        initial={{ y: -50, opacity: 0, rotateX: -90 }}
+        animate={{ y: 0, opacity: 1, rotateX: 0 }}
+        transition={{ duration: 0.8, type: "spring", bounce: 0.4 }}
       >
         Video Search
       </motion.h1>
 
       {!selectedVideo ? (
         <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.4 }}
+          initial={{ y: 50, opacity: 0, rotateX: 30 }}
+          animate={{ y: 0, opacity: 1, rotateX: 0 }}
+          transition={{ duration: 0.8, type: "spring" }}
+          className="transform-gpu"
         >
-          <div className="flex gap-4 mb-8 max-w-2xl mx-auto">
-            <div className="relative flex-1">
+          <div className="flex gap-4 mb-12 max-w-2xl mx-auto">
+            <motion.div 
+              className="relative flex-1 perspective-1000"
+              whileHover={{ scale: 1.02, rotateX: 5 }}
+              transition={{ type: "spring", stiffness: 400 }}
+            >
               <input
                 type="text"
-                className="w-full px-4 py-3 rounded-lg bg-gray-900/50 border border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300"
+                className="w-full px-6 py-4 rounded-xl bg-gray-900/50 border-2 border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 shadow-lg backdrop-blur-sm"
                 placeholder="Search videos..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyPress={handleKeyPress}
               />
-              <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-            </div>
+              <motion.div
+                whileHover={{ rotate: 90 }}
+                transition={{ duration: 0.3 }}
+              >
+                <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 text-purple-400" size={24} />
+              </motion.div>
+            </motion.div>
             <motion.button
-              whileHover={{ scale: 1.05 }}
+              whileHover={{ scale: 1.05, rotateY: 10 }}
               whileTap={{ scale: 0.95 }}
               onClick={handleSearch}
               disabled={isSearching}
-              className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-300 disabled:opacity-50"
+              className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-4 rounded-xl font-medium transition-all duration-300 disabled:opacity-50 shadow-lg hover:shadow-purple-500/25"
             >
               {isSearching ? "Searching..." : "Search"}
             </motion.button>
           </div>
 
           <motion.div 
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
             initial="hidden"
             animate="visible"
             variants={{
@@ -158,56 +168,70 @@ export default function VideoSearch() {
               visible: {
                 opacity: 1,
                 transition: {
-                  staggerChildren: 0.1
+                  staggerChildren: 0.15
                 }
               }
             }}
           >
-            {videos.map((video, index) => (
+            {videos.map((video) => (
               <motion.div
                 key={video.videoId}
                 variants={{
-                  hidden: { opacity: 0, y: 20 },
-                  visible: { opacity: 1, y: 0 }
+                  hidden: { opacity: 0, y: 50, rotateX: 30 },
+                  visible: { opacity: 1, y: 0, rotateX: 0 }
                 }}
                 whileHover={{ 
-                  scale: 1.03,
-                  transition: { duration: 0.2 }
+                  scale: 1.05,
+                  rotateY: 5,
+                  z: 50,
+                  transition: { duration: 0.3 }
                 }}
-                className="cursor-pointer overflow-hidden rounded-xl bg-gray-900/50 border border-gray-800 hover:border-purple-500/50 shadow-lg transition-all duration-300"
+                className="cursor-pointer overflow-hidden rounded-2xl bg-gray-900/50 border-2 border-gray-800 hover:border-purple-500/50 shadow-xl transition-all duration-300 transform-gpu backdrop-blur-sm"
                 onClick={() => handleVideoClick(video)}
               >
-                <div className="aspect-video overflow-hidden">
+                <motion.div 
+                  className="aspect-video overflow-hidden"
+                  whileHover={{ scale: 1.1 }}
+                  transition={{ duration: 0.4 }}
+                >
                   <img 
                     src={video.thumbnail} 
                     alt={video.title} 
-                    className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-300"
+                    className="w-full h-full object-cover"
                   />
-                </div>
-                <div className="p-4">
-                  <h3 className="font-medium text-gray-200 line-clamp-2 mb-2">{video.title}</h3>
-                  <p className="text-sm text-gray-400">{video.channel}</p>
-                </div>
+                </motion.div>
+                <motion.div 
+                  className="p-6"
+                  whileHover={{ y: -5 }}
+                >
+                  <h3 className="font-semibold text-xl text-gray-200 line-clamp-2 mb-3">{video.title}</h3>
+                  <p className="text-sm text-purple-400">{video.channel}</p>
+                </motion.div>
               </motion.div>
             ))}
           </motion.div>
         </motion.div>
       ) : (
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="mt-6"
+          initial={{ opacity: 0, y: 50, rotateX: 30 }}
+          animate={{ opacity: 1, y: 0, rotateX: 0 }}
+          transition={{ duration: 0.8, type: "spring" }}
+          className="mt-8 transform-gpu"
         >
           <VideoPage title={selectedVideo.title} />
           
           <motion.button
-            whileHover={{ scale: 1.05 }}
+            whileHover={{ scale: 1.05, rotateY: -10 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setSelectedVideo(null)}
-            className="mt-8 inline-flex items-center gap-2 bg-gray-800 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-300"
+            className="mt-10 inline-flex items-center gap-3 bg-gradient-to-r from-gray-800 to-gray-700 text-white px-8 py-4 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-purple-500/20"
           >
-            <ArrowLeft size={20} />
+            <motion.div
+              whileHover={{ x: -5 }}
+              transition={{ duration: 0.3 }}
+            >
+              <ArrowLeft size={24} />
+            </motion.div>
             Back to Search
           </motion.button>
         </motion.div>

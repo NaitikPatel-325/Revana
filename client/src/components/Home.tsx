@@ -214,17 +214,18 @@ export default function Home() {
               transformStyle: "preserve-3d"
             }}
             animate={{
-              x: ["0%", "100%", "0%"],
-              y: ["0%", "100%", "0%"],
-              z: [-150, 150, -150],
-              scale: [1, 2.5, 1],
-              opacity: [0.2, 0.6, 0.2]
+              x: Array.from({ length: 20 }, () => `${Math.random() * 200 - 100}%`),
+              y: Array.from({ length: 20 }, () => `${Math.random() * 200 - 100}%`),
+              z: Array.from({ length: 20 }, () => Math.random() * 500 - 250),
+              scale: [0.5, Math.random() * 3 + 1, 0.5],
+              opacity: [0.1, Math.random() * 0.6 + 0.2, 0.1],
+              rotate: Array.from({ length: 20 }, () => Math.random() * 360)
             }}
             transition={{
-              duration: Math.random() * 25 + 15,
+              duration: Math.random() * 15 + 8,
               repeat: Infinity,
-              ease: "easeInOut",
-              delay: -Math.random() * 25,
+              ease: "linear",
+              times: Array.from({ length: 20 }, (_, i) => i / 19)
             }}
           />
         ))}
