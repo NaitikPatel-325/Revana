@@ -5,6 +5,8 @@ import dotenv from "dotenv";
 import { OAuth2Client } from "google-auth-library";
 import axios from "axios";
 import Video from "../models/Video";
+import { generateCommentsDescription } from "./Prompt";
+
 const GITHUB_REDIRECT_URI = process.env.VITE_GITHUB_REDIRECT_URI || "http://localhost:5173/comments";
 
 dotenv.config();
@@ -197,9 +199,26 @@ export const getVideoComments = async (req: Request, res: Response) => {
       bad: allComments.filter((comment: any) => comment.sentiment === 0).length,
     };
 
+
+    const positiveComments = allComments.filter(
+      (comment: any) => comment.sentiment === 2 || comment.sentiment === 1
+    );
+
+    const negativeComments = allComments.filter(
+      (comment: any) => comment.sentiment === 0
+    );
+
+    const descriptions = await generateCommentsDescription(
+      positiveComments,
+      negativeComments
+    );
+
+
+    console.log(descriptions);
+
     res.json({ comments: allComments, sentimentCounts });
   } catch (error) {
-    console.error("YouTube Comments Error:", error);
+    // console.error("YouTube Comments Error:");
     return res.status(500).json({ message: "Failed to fetch comments" });
   }
 };
@@ -348,7 +367,7 @@ export const addComment = async (req: Request, res: Response) => {
 
     res.status(201).json({ message: "Comment added", comment: newComment });
   } catch (error) {
-    console.error("❌ Error adding comment:", error);
+    console.error(" Error adding comment:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -382,3 +401,4 @@ export const getVideoById = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Failed to fetch video details" });
   }
 };
+
