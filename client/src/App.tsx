@@ -7,6 +7,7 @@ import { useGetUserDetailsQuery } from "@/redux/slices/api";
 import { useDispatch } from "react-redux";
 import { updateCurrentUser, updateIsLoggedIn } from "@/redux/slices/appSlice";
 import { ThemeProvider } from "./components/theme-provider";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 function App() {
 
@@ -14,11 +15,22 @@ function App() {
 
   const { data, isSuccess } = useGetUserDetailsQuery();
 
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+
   useEffect(() => {
     if (isSuccess && data) {
       dispatch(updateCurrentUser(data));
       dispatch(updateIsLoggedIn(true));
+      const videoId = searchParams.get("videoId");
+      console.log("videoId : ",videoId);
+      if (videoId) {
+        navigate(`/comments/videos/?videoId=${videoId}`); 
+        //fetchVideoById(videoId);
+      }
     }
+
+    
   }, [data, isSuccess, dispatch]);
   
 

@@ -2,11 +2,12 @@ import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { useGetUserDetailsQuery } from "@/redux/slices/api";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { updateCurrentVideo } from "@/redux/slices/appSlice";
 import VideoPage from "./videopage";
 import { ArrowLeft, Search } from "lucide-react";
 import { motion } from "framer-motion";
+import { RootState } from "@/redux/store";
 
 interface Video {
   videoId: string;
@@ -36,31 +37,39 @@ export default function VideoSearch() {
   const [searchParams] = useSearchParams();
   const dispatch = useDispatch();
 
-  const fetchVideoById = useCallback(async (videoId: string) => {
-    try {
-      const response = await axios.get<{ video: Video }>(
-        `http://localhost:4000/user/comments/videos/get-video?videoId=${videoId}`
-      );
-      setSelectedVideo(response.data.video);
-      setComments([]);
 
-      if (isSuccess) {
-        const commentsResponse = await axios.get<{ comments: Comment[] }>(
-          `http://localhost:4000/user/comments/videos/${videoId}?userEmail=${data.email}`
-        );
-        setComments(commentsResponse.data.comments);
-      }
-    } catch (error) {
-      console.error("Error fetching video:", error);
-    }
-  }, [data, isSuccess]);
+  
+
+  // const fetchVideoById = useCallback(async (videoId: string) => {
+  //   try {
+
+
+
+  //     const response = await axios.get<{ video: Video }>(
+  //       `http://localhost:4000/user/comments/videos/get-video?videoId=${videoId}`
+  //     );
+  //     setSelectedVideo(response.data.video);
+  //     setComments([]);
+
+  //     if (isSuccess) {
+  //       const commentsResponse = await axios.get<{ comments: Comment[] }>(
+  //         `http://localhost:4000/user/comments/videos/${videoId}?userEmail=${data.email}`
+  //       );
+  //       setComments(commentsResponse.data.comments);
+  //     }
+  //   } catch (error) {
+  //     console.error("Error fetching video:", error);
+  //   }
+  // }, [data, isSuccess]);
 
   useEffect(() => {
+
     const videoId = searchParams.get("videoId");
     if (videoId) {
-      fetchVideoById(videoId);
+      navigate(`/comments/videos/?videoId=${videoId}`); 
+      //fetchVideoById(videoId);
     }
-  }, [fetchVideoById, searchParams]);
+  }, [navigate, searchParams]);
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;
@@ -84,6 +93,15 @@ export default function VideoSearch() {
       setSelectedVideo(video);
       setComments([]);
       setNextPageToken(null);
+
+      const VideoData = {
+        videoId: video.videoId,
+        title: video.title,
+        thumbnail: video.thumbnail,
+        channel: video.channel,
+      }
+
+      dispatch(updateCurrentVideo(VideoData));
   
       navigate(`/comments/videos/?videoId=${video.videoId}`); 
 

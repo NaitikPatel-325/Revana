@@ -7,6 +7,7 @@ import './pageStyles/Home.css';
 export default function Home() {
   const letters = "Revana".split("");
   const [glow, setGlow] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -19,7 +20,7 @@ export default function Home() {
   const features = [
     {
       icon: <Brain className="w-6 h-6" />,
-      title: "Sentiment Analysis",
+      title: "Sentiment Analysis", 
       description: "Analyze comments with advanced AI",
       gradient: "from-purple-500 to-indigo-500"
     },
@@ -60,6 +61,10 @@ export default function Home() {
         damping: 15
       }
     }
+  };
+
+  const handlePortalClick = () => {
+    setIsTransitioning(true);
   };
 
   return (
@@ -114,18 +119,103 @@ export default function Home() {
           >
             Advanced Semantic Analysis Platform
           </motion.p>
-          <motion.div
-            whileHover={{ scale: 1.1, rotateY: 15 }}
-            whileTap={{ scale: 0.95 }}
-            style={{ transformStyle: "preserve-3d" }}
-          >
-            <Link 
-              to="/signup" 
-              className="inline-flex items-center gap-3 bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 px-10 py-5 rounded-full font-semibold text-lg transition-all duration-500 shadow-[0_0_25px_rgba(168,85,247,0.5)] hover:shadow-[0_0_40px_rgba(168,85,247,0.7)] hover:bg-gradient-to-r hover:from-pink-600 hover:via-purple-600 hover:to-pink-600"
+          
+          {/* Interactive 3D Portal */}
+          <div onClick={handlePortalClick}>
+            <motion.div
+              className="relative w-96 h-48 mx-auto perspective-2000 cursor-pointer group"
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1, duration: 0.8 }}
             >
-              Get Started <ArrowRight className="w-6 h-6 animate-[bounce-x_1s_ease-in-out_infinite]" />
-            </Link>
-          </motion.div>
+              <motion.div
+                className="absolute inset-0 rounded-3xl overflow-hidden bg-gradient-to-r from-purple-900/30 via-pink-800/30 to-purple-900/30 backdrop-blur-xl"
+                whileHover={{ 
+                  scale: 1.05,
+                  rotateX: 10,
+                  rotateY: 5,
+                  transition: { duration: 0.4 }
+                }}
+                animate={isTransitioning ? {
+                  scale: [1, 2],
+                  rotate: [0, 720],
+                  opacity: [1, 0],
+                } : {}}
+                transition={isTransitioning ? {
+                  duration: 1,
+                  ease: "easeInOut"
+                } : {}}
+              >
+                {/* Portal Effect */}
+                <motion.div
+                  className="absolute inset-0"
+                  animate={isTransitioning ? {
+                    background: [
+                      "radial-gradient(circle at 50% 50%, rgba(168,85,247,0.4) 0%, transparent 60%)",
+                      "radial-gradient(circle at 50% 50%, rgba(255,255,255,1) 0%, rgba(255,255,255,1) 100%)"
+                    ],
+                    scale: [1, 20]
+                  } : {
+                    background: [
+                      "radial-gradient(circle at 50% 50%, rgba(168,85,247,0.4) 0%, transparent 60%)",
+                      "radial-gradient(circle at 50% 50%, rgba(236,72,153,0.4) 0%, transparent 60%)",
+                      "radial-gradient(circle at 50% 50%, rgba(168,85,247,0.4) 0%, transparent 60%)"
+                    ]
+                  }}
+                  transition={isTransitioning ? {
+                    duration: 1,
+                    ease: "easeInOut"
+                  } : { duration: 3, repeat: Infinity }}
+                />
+                
+                {/* Floating Particles */}
+                {[...Array(10)].map((_, i) => (
+                  <motion.div
+                    key={i}
+                    className="absolute w-1 h-1 bg-white rounded-full"
+                    style={{
+                      left: `${Math.random() * 100}%`,
+                      top: `${Math.random() * 100}%`
+                    }}
+                    animate={isTransitioning ? {
+                      scale: [1, 3],
+                      opacity: [1, 0],
+                      rotate: [0, 360],
+                    } : {
+                      scale: [0, 1.5, 0],
+                      opacity: [0, 1, 0],
+                      y: [-20, 20],
+                    }}
+                    transition={isTransitioning ? {
+                      duration: 1,
+                      ease: "easeInOut"
+                    } : {
+                      duration: 2,
+                      repeat: Infinity,
+                      delay: i * 0.2,
+                    }}
+                  />
+                ))}
+
+                <motion.div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <motion.span 
+                    className="text-3xl font-bold bg-gradient-to-r from-purple-300 via-pink-300 to-purple-300 bg-clip-text text-transparent"
+                    whileHover={{ scale: 1.1 }}
+                  >
+                    Enter the Portal
+                  </motion.span>
+                  <motion.div
+                    className="mt-4"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.5 }}
+                  >
+                    <ArrowRight className="w-8 h-8 text-white/70 group-hover:text-white/90 transition-colors" />
+                  </motion.div>
+                </motion.div>
+              </motion.div>
+            </motion.div>
+          </div>
         </motion.div>
 
         <motion.div
@@ -201,35 +291,67 @@ export default function Home() {
 
       {/* Enhanced Floating Particles */}
       <div className="fixed inset-0 pointer-events-none perspective-1000">
-        {[...Array(40)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-3 h-3 rounded-full"
-            style={{
-              background: `radial-gradient(circle at center, ${
-                i % 3 === 0 ? '#A855F7' : i % 3 === 1 ? '#EC4899' : '#3B82F6'
-              }30, transparent)`,
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              transformStyle: "preserve-3d"
-            }}
-            animate={{
-              x: Array.from({ length: 20 }, () => `${Math.random() * 200 - 100}%`),
-              y: Array.from({ length: 20 }, () => `${Math.random() * 200 - 100}%`),
-              z: Array.from({ length: 20 }, () => Math.random() * 500 - 250),
-              scale: [0.5, Math.random() * 3 + 1, 0.5],
-              opacity: [0.1, Math.random() * 0.6 + 0.2, 0.1],
-              rotate: Array.from({ length: 20 }, () => Math.random() * 360)
-            }}
-            transition={{
-              duration: Math.random() * 15 + 8,
-              repeat: Infinity,
-              ease: "linear",
-              times: Array.from({ length: 20 }, (_, i) => i / 19)
-            }}
-          />
-        ))}
+        {[...Array(40)].map((_, i) => {
+          const randomX = Math.random() * window.innerWidth;
+          const randomY = Math.random() * window.innerHeight;
+          const randomDuration = Math.random() * 10 + 10;
+          const randomDelay = Math.random() * -20;
+          
+          return (
+            <motion.div
+              key={i}
+              className="absolute w-6 h-6 rounded-full"
+              style={{
+                background: `radial-gradient(circle at center, ${
+                  i % 3 === 0 ? '#A855F7' : i % 3 === 1 ? '#EC4899' : '#3B82F6'
+                }50, transparent)`,
+                left: randomX,
+                top: randomY,
+                transformStyle: "preserve-3d"
+              }}
+              animate={{
+                x: [
+                  Math.random() * 200 - 100,
+                  Math.random() * 200 - 100,
+                  Math.random() * 200 - 100,
+                  Math.random() * 200 - 100
+                ],
+                y: [
+                  Math.random() * 200 - 100,
+                  Math.random() * 200 - 100,
+                  Math.random() * 200 - 100,
+                  Math.random() * 200 - 100
+                ],
+                scale: [0.5, 1.5, 0.8, 1.2],
+                opacity: [0.3, 0.6, 0.4, 0.5],
+                rotate: [0, 180, 270, 360]
+              }}
+              transition={{
+                duration: randomDuration,
+                repeat: Infinity,
+                delay: randomDelay,
+                ease: "linear",
+                times: [0, 0.33, 0.66, 1]
+              }}
+            />
+          );
+        })}
       </div>
+
+      {/* Transition Overlay */}
+      {isTransitioning && (
+        <motion.div
+          className="fixed inset-0 bg-white z-50"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+          onAnimationComplete={() => {
+            setTimeout(() => {
+              window.location.href = '/signup';
+            }, 500);
+          }}
+        />
+      )}
     </div>
   );
 }

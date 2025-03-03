@@ -16,6 +16,7 @@
     "@radix-ui/react-slot": "^1.1.2",
     "@react-oauth/google": "^0.12.1",
     "@reduxjs/toolkit": "^2.5.0",
+    "@splinetool/react-spline": "^4.0.0",
     "@uiw/codemirror-theme-dracula": "^4.23.0",
     "chart.js": "^4.4.7",
     "class-variance-authority": "^0.7.1",
