@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useGetUserDetailsQuery } from "@/redux/slices/api";
-import { setSentimentCounts } from "@/redux/slices/appSlice";
+import { setSentimentCounts, setVideoDescription, updateCurrentVideo } from "@/redux/slices/appSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send } from "lucide-react";
+import { Send, Upload } from "lucide-react";
 import {
   Pagination,
   PaginationContent,
@@ -37,22 +37,30 @@ export default function Comments({ videoId }: CommentsProps) {
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState<string>("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [loading, setLoading] = useState(true);
   const commentsPerPage = 5;
 
-  const { data, isSuccess } = useGetUserDetailsQuery();
+  const { data } = useGetUserDetailsQuery();
   const dispatch = useDispatch();
   const videodata = useSelector((state: RootState) => state.appSlice.videodata);
+  console.log("VideoData : ", videodata);
 
   useEffect(() => {
     const fetchComments = async () => {
+      setLoading(true);
       try {
-        const response = await axios.get<{ comments: Comment[]; sentimentCounts: SentimentCountType }>(
+        const response = await axios.get<{ comments: Comment[]; sentimentCounts: SentimentCountType; descriptions: { Pd: string; Nd: string } }>(
           `http://localhost:4000/user/comments/videos/${videoId}?userEmail=${data?.email}`
         );
+        console.log(response.data.descriptions);
         setComments(response.data.comments);
+
         dispatch(setSentimentCounts(response.data.sentimentCounts));
+        dispatch(setVideoDescription(response.data.descriptions));
       } catch (error) {
         console.error("Error fetching comments:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -144,6 +152,42 @@ export default function Comments({ videoId }: CommentsProps) {
     }
   };
 
+  // Skeleton loader component for comments
+  const CommentSkeleton = ({ count = 5 }: { count?: number }) => {
+    return (
+      <>
+        {[...Array(count)].map((_, index) => (
+          <motion.div
+            key={`skeleton-${index}`}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: index * 0.05 }}
+            className="bg-gray-800/50 p-4 rounded-xl border border-gray-700/50 animate-pulse"
+          >
+            <div className="flex items-start space-x-4">
+              {/* Profile image skeleton */}
+              <div className="w-10 h-10 rounded-full bg-gray-700"></div>
+              <div className="flex-1 space-y-2">
+                {/* Author name skeleton */}
+                <div className="h-4 bg-gray-700 rounded w-1/4"></div>
+                {/* Comment text skeleton */}
+                <div className="space-y-2">
+                  <div className="h-4 bg-gray-700 rounded w-full"></div>
+                  <div className="h-4 bg-gray-700 rounded w-5/6"></div>
+                  <div className="h-4 bg-gray-700 rounded w-3/4"></div>
+                </div>
+                {/* Sentiment badge skeleton */}
+                <div className="flex justify-end">
+                  <div className="h-6 bg-gray-700 rounded w-24"></div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        ))}
+      </>
+    );
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -176,7 +220,9 @@ export default function Comments({ videoId }: CommentsProps) {
 
       {/* Comments List */}
       <AnimatePresence mode="wait">
-        {comments.length === 0 ? (
+        {loading ? (
+          <CommentSkeleton />
+        ) : comments.length === 0 ? (
           <p className="text-gray-400">No comments yet. Be the first to comment!</p>
         ) : (
           <>

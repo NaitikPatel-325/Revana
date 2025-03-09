@@ -14,6 +14,7 @@ config();
 
 app.use("/user", UserAuthRouter); // Register the user routes under the /user prefix
 
+
 dbConnect();
 
 app.listen(4000, () => {

@@ -216,7 +216,7 @@ export const getVideoComments = async (req: Request, res: Response) => {
 
     console.log(descriptions);
 
-    res.json({ comments: allComments, sentimentCounts });
+    res.json({ comments: allComments, sentimentCounts, descriptions });
   } catch (error) {
     // console.error("YouTube Comments Error:");
     return res.status(500).json({ message: "Failed to fetch comments" });

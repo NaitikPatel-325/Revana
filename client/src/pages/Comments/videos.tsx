@@ -99,6 +99,7 @@ export default function VideoSearch() {
         title: video.title,
         thumbnail: video.thumbnail,
         channel: video.channel,
+        descriptions: {Pd: "", Nd: ""}
       }
 
       dispatch(updateCurrentVideo(VideoData));

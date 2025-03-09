@@ -7,6 +7,7 @@ import { SentimentCountType } from "./videocomments";
 import { Pie } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -17,10 +18,24 @@ interface VideoPageProps {
 export default function VideoPage({ title }: VideoPageProps) {
   const [searchParams] = useSearchParams();
   const videoId = searchParams.get("videoId");
-
+  const [isLoading, setIsLoading] = useState(true);
+    
   const TotalSentimentCounts: SentimentCountType = useSelector(
     (state: RootState) => state.appSlice.TotalSentimentCount
   );
+
+  const videoDescription: { Pd: string; Nd: string } = useSelector(
+    (state: RootState) => state.appSlice.videodata.descriptions
+  );
+
+  useEffect(() => {
+    // Simulate loading time or wait for data
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1500);
+    
+    return () => clearTimeout(timer);
+  }, [videoId]);
 
   if (!videoId) return <p className="text-center text-gray-400">No video selected.</p>;
 
@@ -58,6 +73,16 @@ export default function VideoPage({ title }: VideoPageProps) {
     ],
   };
 
+  // Define proper type for chart.js tooltip context
+  interface TooltipItem {
+    raw: unknown;
+    parsed: number;
+    formattedValue: string;
+    dataset: Record<string, unknown>;
+    datasetIndex: number;
+    dataIndex: number;
+  }
+
   const pieOptions = {
     plugins: {
       legend: {
@@ -84,8 +109,8 @@ export default function VideoPage({ title }: VideoPageProps) {
         cornerRadius: 8,
         displayColors: true,
         callbacks: {
-          label: function(context: any) {
-            const value = context.raw;
+          label: function(tooltipItem: TooltipItem) {
+            const value = Number(tooltipItem.raw);
             const percentage = ((value / totalComments) * 100).toFixed(1);
             return `${value} comments (${percentage}%)`;
           }
@@ -96,11 +121,66 @@ export default function VideoPage({ title }: VideoPageProps) {
       animateScale: true,
       animateRotate: true,
       duration: 2000,
-      easing: 'easeInOutQuart'
+      easing: 'easeInOutQuart' as const
     },
     responsive: true,
     maintainAspectRatio: false,
   };
+
+  // Skeleton loader components
+  const VideoPlayerSkeleton = () => (
+    <div className="animate-pulse">
+      <div className="h-8 w-3/4 bg-gray-700 rounded mb-6"></div>
+      <div className="aspect-video bg-gray-800 rounded-xl"></div>
+    </div>
+  );
+
+  const SentimentStatsSkeleton = () => (
+    <div className="animate-pulse">
+      <div className="h-8 w-1/2 bg-gray-700 rounded mx-auto mb-8"></div>
+      <div className="grid grid-cols-3 gap-4">
+        {[1, 2, 3].map(i => (
+          <div key={i} className="bg-gray-800 p-4 rounded-lg">
+            <div className="h-6 w-12 bg-gray-700 rounded mx-auto mb-2"></div>
+            <div className="h-4 w-16 bg-gray-700 rounded mx-auto"></div>
+          </div>
+        ))}
+      </div>
+      <div className="space-y-6 mt-8">
+        {[1, 2, 3].map(i => (
+          <div key={i} className="space-y-2">
+            <div className="flex justify-between">
+              <div className="h-4 w-20 bg-gray-700 rounded"></div>
+              <div className="h-4 w-16 bg-gray-700 rounded"></div>
+            </div>
+            <div className="h-4 bg-gray-800 rounded-full"></div>
+          </div>
+        ))}
+      </div>
+      <div className="mt-12 h-[300px] flex items-center justify-center">
+        <div className="h-40 w-40 bg-gray-800 rounded-full"></div>
+      </div>
+      <div className="mt-16 space-y-6">
+        <div className="h-8 w-3/4 bg-gray-700 rounded mx-auto mb-10"></div>
+        <div className="bg-gray-800 p-6 rounded-lg">
+          <div className="h-6 w-1/3 bg-gray-700 rounded mb-3"></div>
+          <div className="space-y-2">
+            <div className="h-4 w-full bg-gray-700 rounded"></div>
+            <div className="h-4 w-5/6 bg-gray-700 rounded"></div>
+            <div className="h-4 w-4/5 bg-gray-700 rounded"></div>
+          </div>
+        </div>
+        <div className="bg-gray-800 p-6 rounded-lg">
+          <div className="h-6 w-1/3 bg-gray-700 rounded mb-3"></div>
+          <div className="space-y-2">
+            <div className="h-4 w-full bg-gray-700 rounded"></div>
+            <div className="h-4 w-5/6 bg-gray-700 rounded"></div>
+            <div className="h-4 w-4/5 bg-gray-700 rounded"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="flex flex-col lg:flex-row gap-8">
@@ -110,8 +190,14 @@ export default function VideoPage({ title }: VideoPageProps) {
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <VideoPlayer videoId={videoId} title={title} />
-        <Comments videoId={videoId} />
+        {isLoading ? (
+          <VideoPlayerSkeleton />
+        ) : (
+          <>
+            <VideoPlayer videoId={videoId} title={title} />
+            <Comments videoId={videoId} />
+          </>
+        )}
       </motion.div>
 
       <motion.div 
@@ -120,82 +206,119 @@ export default function VideoPage({ title }: VideoPageProps) {
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5, delay: 0.2 }}
       >
-        <motion.h2 
-          className="text-2xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600 mb-8 text-center"
-          initial={{ y: -20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-        >
-          Sentiment Analysis
-        </motion.h2>
+        {isLoading ? (
+          <SentimentStatsSkeleton />
+        ) : (
+          <>
+            <motion.h2 
+              className="text-2xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600 mb-8 text-center"
+              initial={{ y: -20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+            >
+              Sentiment Analysis
+            </motion.h2>
 
-        <div className="space-y-8">
-          {/* Sentiment Stats */}
-          <motion.div 
-            className="grid grid-cols-3 gap-4 text-center"
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
-          >
-            <div className="bg-green-500/20 p-4 rounded-lg border border-green-500/30">
-              <h3 className="text-green-400 text-xl font-bold">{good}</h3>
-              <p className="text-green-300/80 text-sm">Positive</p>
-            </div>
-            <div className="bg-indigo-500/20 p-4 rounded-lg border border-indigo-500/30">
-              <h3 className="text-indigo-400 text-xl font-bold">{neutral}</h3>
-              <p className="text-indigo-300/80 text-sm">Neutral</p>
-            </div>
-            <div className="bg-red-500/20 p-4 rounded-lg border border-red-500/30">
-              <h3 className="text-red-400 text-xl font-bold">{bad}</h3>
-              <p className="text-red-300/80 text-sm">Negative</p>
-            </div>
-          </motion.div>
-
-          <div className="space-y-6">
-            {/* Sentiment Progress Bars */}
-            {[
-              { label: "Positive", color: "green", percentage: positivePercentage, delay: 0.5 },
-              { label: "Neutral", color: "indigo", percentage: neutralPercentage, delay: 0.6 },
-              { label: "Negative", color: "red", percentage: negativePercentage, delay: 0.7 }
-            ].map((item) => (
+            <div className="space-y-8">
+              {/* Sentiment Stats */}
               <motion.div 
-                key={item.label}
-                className="space-y-2"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: item.delay }}
+                className="grid grid-cols-3 gap-4 text-center"
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.5, delay: 0.4 }}
               >
-                <div className="flex justify-between items-center text-sm font-medium">
-                  <span className={`text-${item.color}-400 flex items-center gap-2`}>
-                    <span className={`w-2 h-2 rounded-full bg-${item.color}-400`}></span>
-                    {item.label}
-                  </span>
-                  <span className="text-gray-300">{item.percentage}%</span>
+                <div className="bg-green-500/20 p-4 rounded-lg border border-green-500/30">
+                  <h3 className="text-green-400 text-xl font-bold">{good}</h3>
+                  <p className="text-green-300/80 text-sm">Positive</p>
                 </div>
-                <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
-                  <motion.div
-                    className={`h-full bg-${item.color}-500 rounded-full`}
-                    initial={{ width: 0 }}
-                    animate={{ width: `${item.percentage}%` }}
-                    transition={{ duration: 1, delay: item.delay, ease: "easeOut" }}
-                  />
+                <div className="bg-indigo-500/20 p-4 rounded-lg border border-indigo-500/30">
+                  <h3 className="text-indigo-400 text-xl font-bold">{neutral}</h3>
+                  <p className="text-indigo-300/80 text-sm">Neutral</p>
+                </div>
+                <div className="bg-red-500/20 p-4 rounded-lg border border-red-500/30">
+                  <h3 className="text-red-400 text-xl font-bold">{bad}</h3>
+                  <p className="text-red-300/80 text-sm">Negative</p>
                 </div>
               </motion.div>
-            ))}
-          </div>
 
-          <motion.div 
-            className="mt-12 h-[300px]"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.7, delay: 0.8 }}
-          >
-            <h4 className="text-center text-gray-400 text-sm font-medium mb-6">
-              Overall Distribution
-            </h4>
-            <Pie data={pieData} options={pieOptions} />
-          </motion.div>
-        </div>
+              <div className="space-y-6">
+                {/* Sentiment Progress Bars */}
+                {[
+                  { label: "Positive", color: "green", percentage: positivePercentage, value: good, delay: 0.5 },
+                  { label: "Neutral", color: "indigo", percentage: neutralPercentage, value: neutral, delay: 0.6 },
+                  { label: "Negative", color: "red", percentage: negativePercentage, value: bad, delay: 0.7 }
+                ].map((item) => (
+                  <motion.div 
+                    key={item.label}
+                    className="space-y-2"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: item.delay }}
+                  >
+                    <div className="flex justify-between items-center text-sm font-medium">
+                      <span className={`text-${item.color}-400 flex items-center gap-2`}>
+                        <span className={`w-3 h-3 rounded-full bg-${item.color}-500`}></span>
+                        {item.label}
+                      </span>
+                      <span className="text-gray-300 font-semibold">{item.percentage}% ({item.value})</span>
+                    </div>
+                    <div className="h-4 bg-gray-800 rounded-full overflow-hidden shadow-inner border border-gray-700 relative">
+                      <div
+                        className={`h-full bg-gradient-to-r from-${item.color}-600 to-${item.color}-400 rounded-full`}
+                        style={{ width: `${Math.max(Number(item.percentage), 1)}%` }}
+                      />
+                      <motion.div
+                        className="absolute inset-0"
+                        initial={{ width: 0 }}
+                        animate={{ width: `${Math.max(Number(item.percentage), 1)}%` }}
+                        transition={{ duration: 1.2, delay: item.delay, ease: "easeInOut" }}
+                      />
+                      <span className="absolute right-2 top-1/2 transform -translate-y-1/2 text-xs font-bold text-white">
+                        {item.percentage}%
+                      </span>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+
+              <motion.div 
+                className="mt-12 h-[300px]"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.7, delay: 0.8 }}
+              >
+                <h4 className="text-center text-gray-400 text-sm font-medium mb-1">
+                  Overall Distribution
+                </h4>
+                <Pie data={pieData} options={pieOptions} />
+              </motion.div>
+
+              {/* Positive and Negative Descriptions*/}
+              <motion.div 
+                className="mt-16 space-y-6" 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.7, delay: 1 }}
+              >
+                <h3 className="text-2xl font-bold text-gray-100 text-center mb-10 relative">
+                  <span className="relative z-10">Sentiment Analysis Summary</span>
+                  <span className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 blur-lg opacity-30 rounded-lg"></span>
+                  <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 h-1 w-24 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full"></div>
+                </h3>
+                
+                <div className="bg-green-500/10 p-6 rounded-lg border border-green-500/20">
+                  <h4 className="text-green-400 text-lg font-semibold mb-3">Positive Description</h4>
+                  <p className="text-green-300 text-sm leading-relaxed">{videoDescription.Pd}</p>
+                </div>
+                
+                <div className="bg-red-500/10 p-6 rounded-lg border border-red-500/20">
+                  <h4 className="text-red-400 text-lg font-semibold mb-3">Negative Description</h4>
+                  <p className="text-red-300 text-sm leading-relaxed">{videoDescription.Nd}</p>
+                </div>
+              </motion.div> 
+            </div>
+          </>
+        )}
       </motion.div>
     </div>
   );

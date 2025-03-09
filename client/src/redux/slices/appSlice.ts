@@ -59,7 +59,8 @@ const appSlice = createSlice({
     channel: "",
     thumbnail: "",
     title: "",
-    videoId: undefined   
+    videoId: undefined,
+    descriptions: {Pd: "", Nd: ""}
     }
   },
   reducers: {
@@ -81,9 +82,12 @@ const appSlice = createSlice({
     updateCurrentVideo: (state, action) => {
       console.log("Video-data action-payload : ",action.payload);
       state.videodata = action.payload;
+    },
+    setVideoDescription: (state, action) => {
+      state.videodata.descriptions = action.payload;
     }
   },
 });
 
-export const { updateCurrentUser, updateIsLoggedIn, setCurrentWidth, updateLoginMethod, setSentimentCounts,updateCurrentVideo } = appSlice.actions;
+export const { updateCurrentUser, updateIsLoggedIn, setCurrentWidth, updateLoginMethod, setSentimentCounts,updateCurrentVideo, setVideoDescription  } = appSlice.actions;
 export default appSlice.reducer;
