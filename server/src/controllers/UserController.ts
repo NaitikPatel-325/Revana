@@ -223,6 +223,26 @@ export const getVideoComments = async (req: Request, res: Response) => {
   }
 };
 
+export const getAmazonSentiment = async (req: Request, res: Response) => {
+    const { asin } = req.query;
+    console.log("ASIN:", asin); 
+    if (!asin) {
+        return res.status(400).json({ error: "ASIN parameter is required" });
+    }
+
+    try {
+        const response = await axios.get(`http://127.0.0.1:5000/api/v1/amazon-reviews?asin=${asin}`);
+
+        if (response.data.error) {
+            return res.status(404).json({ error: response.data.error });
+        }
+
+        res.status(200).json(response.data);
+    } catch (error: any) {
+        res.status(500).json({ error: "Something went wrong", details: error.message });
+    }
+};
+
 
 // export const getVideoComments = async (req: Request, res: Response) => {
 //   const { videoId } = req.params;
