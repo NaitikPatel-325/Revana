@@ -224,23 +224,75 @@ export const getVideoComments = async (req: Request, res: Response) => {
 };
 
 export const getAmazonSentiment = async (req: Request, res: Response) => {
-    const { asin } = req.query;
-    console.log("ASIN:", asin); 
-    if (!asin) {
-        return res.status(400).json({ error: "ASIN parameter is required" });
+  const { asin } = req.params;
+  console.log("ASIN:", asin);
+
+  if (!asin) {
+    return res.status(400).json({ error: "ASIN parameter is required" });
+  }
+
+  try {
+    // Fetch Amazon reviews
+    const response = await axios.get(`http://127.0.0.1:5000/api/v1/amazon-reviews?asin=${asin}`);
+
+    const reviews = typeof response.data === "string" ? JSON.parse(response.data) : response.data;
+
+    if (response.data.error) {
+      return res.status(404).json({ error: response.data.error });
+  }
+
+  console.log("Amazon Reviews:", reviews);
+
+  // Extract reviews for sentiment analysis
+  const reviewsForAnalysis = reviews.map((review: any) => review.review);
+
+    // Send reviews to Flask for sentiment analysis
+    const flaskResponse = await axios.post("http://127.0.0.1:5000/api/v1/youtube-comments", {
+      comments: reviewsForAnalysis,
+    });
+
+    if (!flaskResponse.data || !Array.isArray(flaskResponse.data.comments)) {
+      return res.status(500).json({ error: "Error in sentiment analysis response" });
     }
 
-    try {
-        const response = await axios.get(`http://127.0.0.1:5000/api/v1/amazon-reviews?asin=${asin}`);
+    // Merge sentiment data with original reviews
+    const amazonReviewsWithSentiment = reviews.map((review: any, index: number) => ({
+      ...review,
+      sentiment: flaskResponse.data.comments[index]?.Sentiment || null,
+      sentimentText: flaskResponse.data.comments[index]?.Comment || null,
+    }));
 
-        if (response.data.error) {
-            return res.status(404).json({ error: response.data.error });
-        }
+    // Compute sentiment statistics
+    const sentimentCounts = {
+      good: amazonReviewsWithSentiment.filter((review: any) => review.sentiment === 2).length,
+      neutral: amazonReviewsWithSentiment.filter((review: any) => review.sentiment === 1).length,
+      bad: amazonReviewsWithSentiment.filter((review: any) => review.sentiment === 0).length,
+    };
 
-        res.status(200).json(response.data);
-    } catch (error: any) {
-        res.status(500).json({ error: "Something went wrong", details: error.message });
-    }
+    // Separate positive and negative comments
+    const positiveComments = amazonReviewsWithSentiment.filter(
+      (review: any) => review.sentiment === 2 || review.sentiment === 1
+    );
+
+    const negativeComments = amazonReviewsWithSentiment.filter(
+      (review: any) => review.sentiment === 0
+    );
+
+    // Generate descriptions based on sentiment analysis
+    const descriptions = await generateCommentsDescription(positiveComments, negativeComments);
+
+    console.log("Sentiment Descriptions:", descriptions);
+
+    // Return processed data
+    res.status(200).json({
+      reviews: amazonReviewsWithSentiment,
+      sentimentCounts,
+      descriptions,
+    });
+  } catch (error: any) {
+    console.error("Error fetching Amazon sentiment analysis:", error);
+    res.status(500).json({ error: "Something went wrong", details: error.message });
+  }
 };
 
 

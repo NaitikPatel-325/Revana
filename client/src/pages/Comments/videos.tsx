@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import { useGetUserDetailsQuery } from "@/redux/slices/api";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -8,6 +8,7 @@ import VideoPage from "./videopage";
 import { ArrowLeft, Search } from "lucide-react";
 import { motion } from "framer-motion";
 import { RootState } from "@/redux/store";
+import { Navigate } from "react-router-dom";
 
 interface Video {
   videoId: string;
@@ -31,43 +32,18 @@ export default function VideoSearch() {
   const [nextPageToken, setNextPageToken] = useState<string | null>(null);
   const [newComment, setNewComment] = useState<string>("");
   const [isSearching, setIsSearching] = useState(false);
+
+  const isLoggedIn = useSelector((state: RootState) => state.appSlice.isLoggedIn);
   
   const { data, isSuccess } = useGetUserDetailsQuery();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const dispatch = useDispatch();
 
-
-  
-
-  // const fetchVideoById = useCallback(async (videoId: string) => {
-  //   try {
-
-
-
-  //     const response = await axios.get<{ video: Video }>(
-  //       `http://localhost:4000/user/comments/videos/get-video?videoId=${videoId}`
-  //     );
-  //     setSelectedVideo(response.data.video);
-  //     setComments([]);
-
-  //     if (isSuccess) {
-  //       const commentsResponse = await axios.get<{ comments: Comment[] }>(
-  //         `http://localhost:4000/user/comments/videos/${videoId}?userEmail=${data.email}`
-  //       );
-  //       setComments(commentsResponse.data.comments);
-  //     }
-  //   } catch (error) {
-  //     console.error("Error fetching video:", error);
-  //   }
-  // }, [data, isSuccess]);
-
   useEffect(() => {
-
     const videoId = searchParams.get("videoId");
     if (videoId) {
       navigate(`/comments/videos/?videoId=${videoId}`); 
-      //fetchVideoById(videoId);
     }
   }, [navigate, searchParams]);
 
@@ -122,6 +98,10 @@ export default function VideoSearch() {
       handleSearch();
     }
   };
+
+  if (!isLoggedIn) {
+    return <Navigate to="/" />;
+  }
 
   return (
     <motion.div 

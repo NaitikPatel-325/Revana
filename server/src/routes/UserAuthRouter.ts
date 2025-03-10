@@ -9,7 +9,7 @@ UserAuthRouter.post("/logout", logout);
 // UserAuthRouter.get("/comments/videos/search",searchVideos);
 // UserAuthRouter.get("/comments/videos/:videoId", getVideoComments);
 // UserAuthRouter.post("/comments/videos/:videoId/add-comment", addComment);
-UserAuthRouter.get("/amazone", getAmazonSentiment);
+UserAuthRouter.get("/amazon/:asin", getAmazonSentiment);
 UserAuthRouter.get("/comments/videos/search", searchVideos);
 UserAuthRouter.get("/comments/videos/:videoId", getVideoComments);
 UserAuthRouter.post("/comments/videos/:videoId/add-comment", addComment);

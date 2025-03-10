@@ -73,41 +73,87 @@ def process_comments():
 
 @app.route('/api/v1/amazon-reviews', methods=['GET'])
 def get_reviews_by_asin():
+    import pandas as pd
+    import json
+
+
+    # Load Excel file (Update with actual file path)
+    file_path = "amazon_vfl_reviews.xls"  # Replace with actual file path
+
+    # Function to extract data by ASIN
+    def get_data_by_asin(asin):
+        try:
+            # Read the Excel file
+            df = pd.read_csv(file_path, dtype=str) 
+
+            # Check if ASIN column exists
+            asin_column = None
+            for col in df.columns:
+                if "asin" in col.lower():  # Case-insensitive check
+                    asin_column = col
+                    break
+            
+            if not asin_column:
+                return json.dumps({"error": "ASIN column not found"}, indent=4)
+
+            # Filter data by ASIN
+            filtered_df = df[df[asin_column] == asin]
+
+            if filtered_df.empty:
+                return json.dumps({"error": "No data found for this ASIN"}, indent=4)
+
+            # Extract relevant columns (adjust column names if necessary)
+            output = filtered_df.to_dict(orient="records")
+
+            return json.dumps(output, indent=4)
+
+        except Exception as e:
+            return json.dumps({"error": str(e)}, indent=4)
+
+    
+    
+    
+    import os
+
+    # Use the full path
+    file_path = os.path.abspath("flask/amazon_vfl_reviews.xls")
+
     asin = request.args.get('asin')
     print(asin)
-    if not asin:
-        return jsonify({"error": "ASIN parameter is required"}), 400
+    # if not asin:
+    #     return jsonify({"error": "ASIN parameter is required"}), 400
 
     try:
-        # Read the Excel file instead of CSV
-        df = pd.read_excel(file_path, dtype=str)
-        print(df.columns)
-        # Find the ASIN column
-        asin_column = next((col for col in df.columns if "asin" in col.lower()), None)
+        # # Read the Excel file instead of CSV
+        # df = pd.read_excel(file_path, dtype=str)
+        # print(df.columns)
+        # # Find the ASIN column
+        # asin_column = next((col for col in df.columns if "asin" in col.lower()), None)
 
-        if not asin_column:
-            return jsonify({"error": "ASIN column not found"}), 400
+        # if not asin_column:
+        #     return jsonify({"error": "ASIN column not found"}), 400
 
-        # Filter data based on ASIN
-        filtered_df = df[df[asin_column] == asin]
+        # # Filter data based on ASIN
+        # filtered_df = df[df[asin_column] == asin]
 
-        if filtered_df.empty:
-            return jsonify({"error": "No data found for this ASIN"}), 404
+        # if filtered_df.empty:
+        #     return jsonify({"error": "No data found for this ASIN"}), 404
 
-        # Apply sentiment analysis
-        filtered_df['Review'] = filtered_df['Review'].astype(str).apply(text_processing)
-        filtered_df["Compound"] = filtered_df["Review"].apply(lambda x: sentiments.polarity_scores(x)["compound"])
+        # # Apply sentiment analysis
+        # filtered_df['Review'] = filtered_df['Review'].astype(str).apply(text_processing)
+        # filtered_df["Compound"] = filtered_df["Review"].apply(lambda x: sentiments.polarity_scores(x)["compound"])
 
-        # Classify Sentiment
-        filtered_df["Sentiment"] = filtered_df["Compound"].apply(
-            lambda x: 'Positive' if x >= 0.05 else 'Negative' if x <= -0.05 else 'Neutral'
-        )
+        # # Classify Sentiment
+        # filtered_df["Sentiment"] = filtered_df["Compound"].apply(
+        #     lambda x: 'Positive' if x >= 0.05 else 'Negative' if x <= -0.05 else 'Neutral'
+        # )
 
-        # Drop unnecessary columns
-        filtered_df.drop(['Compound'], axis=1, inplace=True)
+        # # Drop unnecessary columns
+        # filtered_df.drop(['Compound'], axis=1, inplace=True)
 
-        # Return the result
-        output = filtered_df.to_dict(orient="records")
+        # # Return the result
+        # output = filtered_df.to_dict(orient="records")
+        output = get_data_by_asin(asin)
         return jsonify(output)
 
     except Exception as e:
