@@ -1,5 +1,5 @@
 import express from "express";
-import { googleSignin,getAmazonSentiment, getUserDetails, logout, searchVideos, getVideoComments, addComment, getVideoById } from "../controllers/UserController";
+import { googleSignin, getAmazonSentiment, getUserDetails, logout, searchVideos, getVideoComments, addComment, getVideoById, addAmazonReview } from "../controllers/UserController";
 
 export const UserAuthRouter = express.Router();
 
@@ -10,6 +10,7 @@ UserAuthRouter.post("/logout", logout);
 // UserAuthRouter.get("/comments/videos/:videoId", getVideoComments);
 // UserAuthRouter.post("/comments/videos/:videoId/add-comment", addComment);
 UserAuthRouter.get("/amazon/:asin", getAmazonSentiment);
+UserAuthRouter.post("/amazon/review", addAmazonReview);
 UserAuthRouter.get("/comments/videos/search", searchVideos);
 UserAuthRouter.get("/comments/videos/:videoId", getVideoComments);
 UserAuthRouter.post("/comments/videos/:videoId/add-comment", addComment);

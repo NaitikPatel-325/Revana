@@ -49,6 +49,8 @@ def text_processing(text):
 def process_comments():
     data = request.json
     comments = data.get("comments", [])
+    
+    
 
     if not comments:
         return jsonify({'error': 'No comments provided'}), 400
@@ -68,6 +70,11 @@ def process_comments():
     df['Sentiment'] = le.fit_transform(df['Sentiment'])
 
     processed_comments = df[['Comment', 'Sentiment']].to_dict(orient='records')
+    
+    
+    # print(processed_comments)
+    
+    
     return jsonify({'comments': processed_comments})
 
 

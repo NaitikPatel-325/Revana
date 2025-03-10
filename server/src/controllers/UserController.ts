@@ -6,6 +6,7 @@ import { OAuth2Client } from "google-auth-library";
 import axios from "axios";
 import Video from "../models/Video";
 import { generateCommentsDescription } from "./Prompt";
+import { Fashion } from "../models/Fashion";
 
 const GITHUB_REDIRECT_URI = process.env.VITE_GITHUB_REDIRECT_URI || "http://localhost:5173/comments";
 
@@ -232,56 +233,87 @@ export const getAmazonSentiment = async (req: Request, res: Response) => {
   }
 
   try {
-    // Fetch Amazon reviews
+    // Fetch Amazon reviews from database first
+    let dbProduct = await Fashion.findOne({ asin });
+    let dbReviews = dbProduct?.reviews || [];
+    
+    // Format DB reviews to match expected structure
+    const formattedDbReviews = dbReviews.map(review => ({
+      asin,
+      rating: review.rating.toString(),
+      review: review.review,
+      date: review.date
+    }));
+    
+    // Fetch Amazon reviews from API
     const response = await axios.get(`http://127.0.0.1:5000/api/v1/amazon-reviews?asin=${asin}`);
 
-    const reviews = typeof response.data === "string" ? JSON.parse(response.data) : response.data;
+    const apiReviews = typeof response.data === "string" ? JSON.parse(response.data) : response.data;
 
     if (response.data.error) {
       return res.status(404).json({ error: response.data.error });
-  }
+    }
 
-  console.log("Amazon Reviews:", reviews);
+    console.log("Amazon Reviews:", apiReviews);
 
-  // Extract reviews for sentiment analysis
-  const reviewsForAnalysis = reviews.map((review: any) => review.review);
+    // Combine reviews from DB and API, with DB reviews first
+    const allReviews = [...formattedDbReviews, ...apiReviews];
+
+    // Extract reviews for sentiment analysis
+    const reviewsForAnalysis = allReviews.map((review: any) => review.review);
 
     // Send reviews to Flask for sentiment analysis
     const flaskResponse = await axios.post("http://127.0.0.1:5000/api/v1/youtube-comments", {
       comments: reviewsForAnalysis,
     });
 
+    //console.log("Flask Response:", flaskResponse.data);
+
     if (!flaskResponse.data || !Array.isArray(flaskResponse.data.comments)) {
       return res.status(500).json({ error: "Error in sentiment analysis response" });
     }
 
     // Merge sentiment data with original reviews
-    const amazonReviewsWithSentiment = reviews.map((review: any, index: number) => ({
+    const amazonReviewsWithSentiment = allReviews.map((review: any, index: number) => ({
       ...review,
       sentiment: flaskResponse.data.comments[index]?.Sentiment || null,
       sentimentText: flaskResponse.data.comments[index]?.Comment || null,
     }));
 
+    //console.log("Amazon Reviews with Sentiment:", amazonReviewsWithSentiment);
+
     // Compute sentiment statistics
     const sentimentCounts = {
       good: amazonReviewsWithSentiment.filter((review: any) => review.sentiment === 2).length,
       neutral: amazonReviewsWithSentiment.filter((review: any) => review.sentiment === 1).length,
-      bad: amazonReviewsWithSentiment.filter((review: any) => review.sentiment === 0).length,
+      bad: (amazonReviewsWithSentiment.filter((review: any) => review.sentiment === 0).length) == 0 ? allReviews.filter((review: any) => review.rating <= 2).length : amazonReviewsWithSentiment.filter((review: any) => review.sentiment === 0).length,
     };
 
-    // Separate positive and negative comments
-    const positiveComments = amazonReviewsWithSentiment.filter(
-      (review: any) => review.sentiment === 2 || review.sentiment === 1
-    );
+    console.log("Sentiment Counts:", sentimentCounts);
 
-    const negativeComments = amazonReviewsWithSentiment.filter(
+    // Separate positive and negative comments
+    let positiveComments = amazonReviewsWithSentiment.filter(
+      (review: any) => review.sentiment === 2 || review.sentiment === 1
+    ).map((comment: any) => comment.sentimentText);
+
+   
+    const negativeComments = (amazonReviewsWithSentiment.filter(
       (review: any) => review.sentiment === 0
-    );
+    ).map((comment: any) => comment.sentimentText).length == 0) ? 
+
+    allReviews.filter((review:   any) => review.rating <= 2).map((review: any) => review.review) :
+
+                              amazonReviewsWithSentiment.filter(
+      (review: any) => review.sentiment === 0
+    ).map((comment: any) => comment.sentimentText);
+
+    //console.log("Positive Comments:", positiveComments);
+    //console.log("Negative Comments:", negativeComments);
 
     // Generate descriptions based on sentiment analysis
     const descriptions = await generateCommentsDescription(positiveComments, negativeComments);
 
-    console.log("Sentiment Descriptions:", descriptions);
+    //console.log("Sentiment Descriptions:", descriptions);
 
     // Return processed data
     res.status(200).json({
@@ -474,3 +506,43 @@ export const getVideoById = async (req: Request, res: Response) => {
   }
 };
 
+
+
+export const addAmazonReview = async (req: Request, res: Response) => {
+  try {
+    const { asin, rating, review } = req.body;
+    
+    if (!asin || !rating || !review) {
+      return res.status(400).json({ message: "ASIN, rating, and review are required" });
+    }
+    
+    // Find the product by ASIN
+    let product = await Fashion.findOne({ asin });
+    
+    // If product doesn't exist, create a new one
+    if (!product) {
+      product = new Fashion({
+        asin,
+        reviews: []
+      });
+    }
+    
+    // Add the new review
+    const newReview = {
+      rating: Number(rating),
+      review,
+      date: new Date().toISOString().split('T')[0] // Format as YYYY-MM-DD
+    };
+    
+    product.reviews.push(newReview);
+    await product.save();
+    
+    res.status(201).json({ 
+      message: "Review added successfully", 
+      review: newReview 
+    });
+  } catch (error) {
+    console.error("Error adding Amazon review:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};

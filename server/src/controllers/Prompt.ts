@@ -21,8 +21,12 @@ export async function generateCommentsDescription(
   negativeComments: Comment[]
 ): Promise<{ Pd: string; Nd: string }> {
   try {
+
     const positiveText = extractCommentText(positiveComments);
     const negativeText = extractCommentText(negativeComments);
+
+    console.log("Positive Text:", positiveText);
+    console.log("Negative Text:", negativeText);
 
     const positivePrompt = `Analyze the following positive and neutral comments and generate a brief, insightful description summarizing their overall sentiment:\n\n${positiveText}`;
     const negativePrompt = `Analyze the following negative comments and generate a brief, insightful description summarizing their overall sentiment:\n\n${negativeText}`;
@@ -39,10 +43,12 @@ export async function generateCommentsDescription(
     ]);
 
     const pd = positiveResponse.choices[0]?.message?.content ?? "No positive description available.";
-    const nd = negativeResponse.choices[0]?.message?.content ?? "No negative description available.";
+    const nd = negativeResponse.choices[0]?.message?.content?.includes("Please provide the negative comments") 
+    ? "No negative description available." 
+    : negativeResponse.choices[0]?.message?.content ?? "No negative description available.";
 
-    console.log("Positive Description:", pd);
-    console.log("Negative Description:", nd);
+    //console.log("Positive Description:", pd);
+    //console.log("Negative Description:", nd);
 
     return {
       Pd: pd,

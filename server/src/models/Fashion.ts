@@ -1,40 +1,41 @@
 import { Schema, model } from "mongoose";
 
 interface IFashionSchema {
+  asin: string;
   name: string;
-  images: string;
   reviews: {
-    review_rating: number;
-    review_title: string;
-    review_body: string;
+    rating: number;
+    review: string;
+    date: string;
   }[];
 }
 
 const FashionSchema = new Schema<IFashionSchema>(
   {
+    asin: {
+      type: String,
+      required: true,
+      trim: true,
+    },
     name: {
       type: String,
       required: false,
       trim: true,
     },
-    images: {
-      type: String,
-      required: true,
-    },
     reviews: [
       {
-        review_rating: {
+        rating: {
           type: Number,
           required: false,
           min: 1,
           max: 5,
         },
-        review_title: {
+        review: {
           type: String,
           required: false,
           trim: true,
         },
-        review_body: {
+        date: {
           type: String,
           required: false,
           trim: true,
