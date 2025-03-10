@@ -61,9 +61,12 @@ def process_comments():
 
     # Sentiment Analysis
     df["Compound"] = df["Comment"].apply(lambda x: sentiments.polarity_scores(x)["compound"])
+    
+    print(df["Compound"])
 
     # Classify Sentiment
-    df["Sentiment"] = df["Compound"].apply(lambda x: 'Positive' if x >= 0.05 else 'Negative' if x <= -0.05 else 'Neutral')
+    df["Sentiment"] = df["Compound"].apply(lambda x: 'Positive' if x >= 0.3 else 'Negative' if x <= -0.3 else 'Neutral')
+
 
     # Encode Sentiments
     le = LabelEncoder()

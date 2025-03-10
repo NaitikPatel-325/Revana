@@ -25,8 +25,8 @@ export async function generateCommentsDescription(
     const positiveText = extractCommentText(positiveComments);
     const negativeText = extractCommentText(negativeComments);
 
-    console.log("Positive Text:", positiveText);
-    console.log("Negative Text:", negativeText);
+    // console.log("Positive Text:", positiveText);
+    // console.log("Negative Text:", negativeText);
 
     const positivePrompt = `Analyze the following positive and neutral comments and generate a brief, insightful description summarizing their overall sentiment:\n\n${positiveText}`;
     const negativePrompt = `Analyze the following negative comments and generate a brief, insightful description summarizing their overall sentiment:\n\n${negativeText}`;

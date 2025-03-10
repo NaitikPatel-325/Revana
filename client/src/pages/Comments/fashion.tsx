@@ -75,7 +75,7 @@ export default function Fashion() {
 
 
 
-      //console.log("Review Data:", reviewData);
+      console.log("Review Data:", reviewData);
       
       setProduct(reviewData);
       dispatch(setSentimentCounts(response.data.sentimentCounts));
@@ -393,7 +393,7 @@ export default function Fashion() {
                     transition={{ delay: 0.2, duration: 0.5 }}
                     className="text-3xl font-bold text-white mb-2 md:mb-0 leading-tight"
                   >
-                    {product[0].name}
+                    {product[2].name}
                   </motion.h2>
                   <motion.div
                     initial={{ x: 20, opacity: 0 }}
@@ -401,7 +401,7 @@ export default function Fashion() {
                     transition={{ delay: 0.3, duration: 0.5 }}
                     className="px-4 py-2 bg-blue-500/10 rounded-lg text-blue-400 font-mono border border-blue-500/20 hover:bg-blue-500/20 transition-colors duration-300"
                   >
-                    ASIN: {product[0].asin}
+                    ASIN: {product[2].asin}
                   </motion.div>
                 </div>
 

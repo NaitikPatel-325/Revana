@@ -254,7 +254,7 @@ export const getAmazonSentiment = async (req: Request, res: Response) => {
       return res.status(404).json({ error: response.data.error });
     }
 
-    console.log("Amazon Reviews:", apiReviews);
+    //console.log("Amazon Reviews:", apiReviews);
 
     // Combine reviews from DB and API, with DB reviews first
     const allReviews = [...formattedDbReviews, ...apiReviews];
@@ -289,7 +289,7 @@ export const getAmazonSentiment = async (req: Request, res: Response) => {
       bad: (amazonReviewsWithSentiment.filter((review: any) => review.sentiment === 0).length) == 0 ? allReviews.filter((review: any) => review.rating <= 2).length : amazonReviewsWithSentiment.filter((review: any) => review.sentiment === 0).length,
     };
 
-    console.log("Sentiment Counts:", sentimentCounts);
+    //console.log("Sentiment Counts:", sentimentCounts);
 
     // Separate positive and negative comments
     let positiveComments = amazonReviewsWithSentiment.filter(
