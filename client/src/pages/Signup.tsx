@@ -18,6 +18,7 @@ const Signup = () => {
   const handleGoogleLoginSuccess = async (credentialResponse: any) => {
     try {
       const { credential } = credentialResponse;
+      console.log("Credential:", credential);
       const data = await loginWithGoogle({ idToken: credential }).unwrap();
   
       console.log("Google Login Response:", data);
@@ -29,7 +30,7 @@ const Signup = () => {
       dispatch(updateIsLoggedIn(true));
       dispatch(updateLoginMethod("google"));
       
-      setisLoggedIn(true);
+      //setisLoggedIn(true);
   
     } catch (error) {
       console.error("Google Login Failed:", error);

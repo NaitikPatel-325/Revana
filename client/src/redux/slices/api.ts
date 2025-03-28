@@ -12,11 +12,6 @@ interface googleSignInResponseType {
   user: userInfoType;
 }
 
-interface githubSignInResponseType {
-  token: string;
-  user: userInfoType;
-}
-
 
 export interface loginCredentialsType {
   email: string;
@@ -70,14 +65,7 @@ export const api = createApi({
         method: "POST",
         body,
       }),
-    }),    
-    githubSignIn: builder.mutation<githubSignInResponseType, { code: string }>({
-      query: (body) => ({
-        url: "/user/githubSignin",
-        method: "POST",
-        body,
-      }),
-    }),
+    })
   }),
 });
 
@@ -87,5 +75,4 @@ export const {
   useGetUserDetailsQuery,
   useSignupMutation,
   useGoogleSignInMutation,
-  useGithubSignInMutation,
 } = api;

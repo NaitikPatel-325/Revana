@@ -8,7 +8,8 @@ import Video from "../models/Video";
 import { generateCommentsDescription } from "./Prompt";
 import { Fashion } from "../models/Fashion";
 
-const GITHUB_REDIRECT_URI = process.env.VITE_GITHUB_REDIRECT_URI || "http://localhost:5173/comments";
+import NodeCache from "node-cache";
+const cache = new NodeCache({ stdTTL: 300, checkperiod: 320 }); // Cache for 5 minutes
 
 dotenv.config();
 
@@ -107,10 +108,15 @@ export const logout = async (req: Request, res: Response) => {
 };
 
 
-
 export const searchVideos = async (req: Request, res: Response) => {
+  console.log(cache); // Shows all cached keys
+
   const { query } = req.query;
   if (!query) return res.status(400).json({ message: "Search query is required" });
+
+  // Check cache before making API request
+  const cachedVideos = cache.get(`search-${query}`);
+  if (cachedVideos) return res.json(cachedVideos);
 
   try {
     const API_KEY = process.env.VITE_YOUTUBE_API_KEY;
@@ -125,7 +131,12 @@ export const searchVideos = async (req: Request, res: Response) => {
       thumbnail: item.snippet.thumbnails.medium.url,
     }));
 
-    return res.json({ videos });
+    const responseData = { videos };
+
+    // Store result in cache
+    cache.set(`search-${query}`, responseData);
+
+    return res.json(responseData);
   } catch (error) {
     console.error("YouTube Search Error:", error);
     return res.status(500).json({ message: "Failed to fetch videos" });
@@ -133,11 +144,16 @@ export const searchVideos = async (req: Request, res: Response) => {
 };
 
 
+
 export const getVideoComments = async (req: Request, res: Response) => {
   const { videoId } = req.params;
   const { userEmail } = req.query;
 
   if (!videoId) return res.status(400).json({ message: "Video ID is required" });
+
+  // Check cache
+  const cachedComments = cache.get(`video-comments-${videoId}`);
+  if (cachedComments) return res.json(cachedComments);
 
   try {
     let userComments: any[] = [];
@@ -156,7 +172,7 @@ export const getVideoComments = async (req: Request, res: Response) => {
               author: (comment.user as any).email,
               text: comment.text,
               profileImage: (comment.user as any).picture || "/default-avatar.png",
-              sentiment: (comment as any).sentiment || 1, 
+              sentiment: (comment as any).sentiment || 1,
               sentimentText: comment.text,
             }));
         }
@@ -176,7 +192,11 @@ export const getVideoComments = async (req: Request, res: Response) => {
       totalReplyCount: item.snippet.totalReplyCount,
     }));
 
-    if (!ytComments.length) return res.json({ comments: userComments, sentimentCounts: { good: 0, neutral: 0, bad: 0 } });
+    if (!ytComments.length) {
+      const response = { comments: userComments, sentimentCounts: { good: 0, neutral: 0, bad: 0 } };
+      cache.set(`video-comments-${videoId}`, response);
+      return res.json(response);
+    }
 
     const flaskResponse = await axios.post("http://127.0.0.1:5000/api/v1/youtube-comments", {
       comments: ytComments.map((comment: any) => comment.text),
@@ -200,26 +220,16 @@ export const getVideoComments = async (req: Request, res: Response) => {
       bad: allComments.filter((comment: any) => comment.sentiment === 0).length,
     };
 
+    const positiveComments = allComments.filter((comment: any) => comment.sentiment === 2 || comment.sentiment === 1);
+    const negativeComments = allComments.filter((comment: any) => comment.sentiment === 0);
 
-    const positiveComments = allComments.filter(
-      (comment: any) => comment.sentiment === 2 || comment.sentiment === 1
-    );
+    const descriptions = await generateCommentsDescription(positiveComments, negativeComments);
 
-    const negativeComments = allComments.filter(
-      (comment: any) => comment.sentiment === 0
-    );
+    const response = { comments: allComments, sentimentCounts, descriptions };
+    cache.set(`video-comments-${videoId}`, response);
 
-    const descriptions = await generateCommentsDescription(
-      positiveComments,
-      negativeComments
-    );
-
-
-    console.log(descriptions);
-
-    res.json({ comments: allComments, sentimentCounts, descriptions });
+    res.json(response);
   } catch (error) {
-    // console.error("YouTube Comments Error:");
     return res.status(500).json({ message: "Failed to fetch comments" });
   }
 };
@@ -232,20 +242,21 @@ export const getAmazonSentiment = async (req: Request, res: Response) => {
     return res.status(400).json({ error: "ASIN parameter is required" });
   }
 
+  // Check cache
+  const cachedReviews = cache.get(`amazon-reviews-${asin}`);
+  if (cachedReviews) return res.json(cachedReviews);
+
   try {
-    // Fetch Amazon reviews from database first
     let dbProduct = await Fashion.findOne({ asin });
     let dbReviews = dbProduct?.reviews || [];
-    
-    // Format DB reviews to match expected structure
-    const formattedDbReviews = dbReviews.map(review => ({
+
+    const formattedDbReviews = dbReviews.map((review) => ({
       asin,
       rating: review.rating.toString(),
       review: review.review,
-      date: review.date
+      date: review.date,
     }));
-    
-    // Fetch Amazon reviews from API
+
     const response = await axios.get(`http://127.0.0.1:5000/api/v1/amazon-reviews?asin=${asin}`);
 
     const apiReviews = typeof response.data === "string" ? JSON.parse(response.data) : response.data;
@@ -254,78 +265,50 @@ export const getAmazonSentiment = async (req: Request, res: Response) => {
       return res.status(404).json({ error: response.data.error });
     }
 
-    //console.log("Amazon Reviews:", apiReviews);
-
-    // Combine reviews from DB and API, with DB reviews first
     const allReviews = [...formattedDbReviews, ...apiReviews];
 
-    // Extract reviews for sentiment analysis
     const reviewsForAnalysis = allReviews.map((review: any) => review.review);
 
-    // Send reviews to Flask for sentiment analysis
     const flaskResponse = await axios.post("http://127.0.0.1:5000/api/v1/youtube-comments", {
       comments: reviewsForAnalysis,
     });
-
-    //console.log("Flask Response:", flaskResponse.data);
 
     if (!flaskResponse.data || !Array.isArray(flaskResponse.data.comments)) {
       return res.status(500).json({ error: "Error in sentiment analysis response" });
     }
 
-    // Merge sentiment data with original reviews
     const amazonReviewsWithSentiment = allReviews.map((review: any, index: number) => ({
       ...review,
       sentiment: flaskResponse.data.comments[index]?.Sentiment || null,
       sentimentText: flaskResponse.data.comments[index]?.Comment || null,
     }));
 
-    //console.log("Amazon Reviews with Sentiment:", amazonReviewsWithSentiment);
-
-    // Compute sentiment statistics
     const sentimentCounts = {
       good: amazonReviewsWithSentiment.filter((review: any) => review.sentiment === 2).length,
       neutral: amazonReviewsWithSentiment.filter((review: any) => review.sentiment === 1).length,
-      bad: (amazonReviewsWithSentiment.filter((review: any) => review.sentiment === 0).length) == 0 ? allReviews.filter((review: any) => review.rating <= 2).length : amazonReviewsWithSentiment.filter((review: any) => review.sentiment === 0).length,
+      bad: amazonReviewsWithSentiment.filter((review: any) => review.sentiment === 0).length || allReviews.filter((review: any) => review.rating <= 2).length,
     };
 
-    //console.log("Sentiment Counts:", sentimentCounts);
+    let positiveComments = amazonReviewsWithSentiment
+      .filter((review: any) => review.sentiment === 2 || review.sentiment === 1)
+      .map((comment: any) => comment.sentimentText);
 
-    // Separate positive and negative comments
-    let positiveComments = amazonReviewsWithSentiment.filter(
-      (review: any) => review.sentiment === 2 || review.sentiment === 1
-    ).map((comment: any) => comment.sentimentText);
+    const negativeComments =
+      amazonReviewsWithSentiment.filter((review: any) => review.sentiment === 0).map((comment: any) => comment.sentimentText).length === 0
+        ? allReviews.filter((review: any) => review.rating <= 2).map((review: any) => review.review)
+        : amazonReviewsWithSentiment.filter((review: any) => review.sentiment === 0).map((comment: any) => comment.sentimentText);
 
-   
-    const negativeComments = (amazonReviewsWithSentiment.filter(
-      (review: any) => review.sentiment === 0
-    ).map((comment: any) => comment.sentimentText).length == 0) ? 
-
-    allReviews.filter((review:   any) => review.rating <= 2).map((review: any) => review.review) :
-
-                              amazonReviewsWithSentiment.filter(
-      (review: any) => review.sentiment === 0
-    ).map((comment: any) => comment.sentimentText);
-
-    //console.log("Positive Comments:", positiveComments);
-    //console.log("Negative Comments:", negativeComments);
-
-    // Generate descriptions based on sentiment analysis
     const descriptions = await generateCommentsDescription(positiveComments, negativeComments);
 
-    //console.log("Sentiment Descriptions:", descriptions);
+    const responseData = { reviews: amazonReviewsWithSentiment, sentimentCounts, descriptions };
+    cache.set(`amazon-reviews-${asin}`, responseData);
 
-    // Return processed data
-    res.status(200).json({
-      reviews: amazonReviewsWithSentiment,
-      sentimentCounts,
-      descriptions,
-    });
+    res.status(200).json(responseData);
   } catch (error: any) {
-    console.error("Error fetching Amazon sentiment analysis:", error);
     res.status(500).json({ error: "Something went wrong", details: error.message });
   }
 };
+
 
 
 // export const getVideoComments = async (req: Request, res: Response) => {
@@ -417,6 +400,8 @@ export const getAmazonSentiment = async (req: Request, res: Response) => {
 // };
 
 export const addComment = async (req: Request, res: Response) => {
+  console.log("Received Request:", req.body);
+  console.log("Request URL : ", req.url);
   console.log("Received Headers:", req.headers);
 
   const userEmail = req.headers["user-id"] as string;
