@@ -242,44 +242,65 @@ export default function VideoPage({ title }: VideoPageProps) {
               </motion.div>
 
               <div className="space-y-6">
-                {/* Sentiment Progress Bars */}
-                {[
-                  { label: "Positive", color: "green", percentage: positivePercentage, value: good, delay: 0.5 },
-                  { label: "Neutral", color: "indigo", percentage: neutralPercentage, value: neutral, delay: 0.6 },
-                  { label: "Negative", color: "red", percentage: negativePercentage, value: bad, delay: 0.7 }
-                ].map((item) => (
-                  <motion.div 
-                    key={item.label}
-                    className="space-y-2"
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: item.delay }}
-                  >
-                    <div className="flex justify-between items-center text-sm font-medium">
-                      <span className={`text-${item.color}-400 flex items-center gap-2`}>
-                        <span className={`w-3 h-3 rounded-full bg-${item.color}-500`}></span>
-                        {item.label}
-                      </span>
-                      <span className="text-gray-300 font-semibold">{item.percentage}% ({item.value})</span>
-                    </div>
-                    <div className="h-4 bg-gray-800 rounded-full overflow-hidden shadow-inner border border-gray-700 relative">
-                      <div
-                        className={`h-full bg-gradient-to-r from-${item.color}-600 to-${item.color}-400 rounded-full`}
-                        style={{ width: `${Math.max(Number(item.percentage), 1)}%` }}
-                      />
-                      <motion.div
-                        className="absolute inset-0"
-                        initial={{ width: 0 }}
-                        animate={{ width: `${Math.max(Number(item.percentage), 1)}%` }}
-                        transition={{ duration: 1.2, delay: item.delay, ease: "easeInOut" }}
-                      />
-                      <span className="absolute right-2 top-1/2 transform -translate-y-1/2 text-xs font-bold text-white">
-                        {item.percentage}%
-                      </span>
-                    </div>
-                  </motion.div>
-                ))}
+        {[
+          { 
+            label: "Positive", 
+            color: "bg-emerald-500", 
+            textColor: "text-emerald-500", 
+            percentage: positivePercentage, 
+            value: good, 
+            delay: 0.5 
+          },
+          { 
+            label: "Neutral", 
+            color: "bg-sky-500", 
+            textColor: "text-sky-500", 
+            percentage: neutralPercentage, 
+            value: neutral, 
+            delay: 0.6 
+          },
+          { 
+            label: "Negative", 
+            color: "bg-rose-500", 
+            textColor: "text-rose-500", 
+            percentage: negativePercentage, 
+            value: bad, 
+            delay: 0.7 
+          }
+        ].map((item) => (
+          <motion.div 
+            key={item.label}
+            className="space-y-2"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: item.delay }}
+          >
+            <div className="flex justify-between items-center text-sm">
+              <div className={`flex items-center gap-2 ${item.textColor}`}>
+                <div className={`w-3 h-3 rounded-full ${item.color}`}></div>
+                <span className="font-medium">{item.label}</span>
               </div>
+              <div className="text-gray-300">
+                <span className="font-semibold">{item.percentage}%</span>
+                <span className="text-xs ml-1 text-gray-400">({item.value})</span>
+              </div>
+            </div>
+            <div className="h-2.5 bg-gray-800/50 rounded-full overflow-hidden">
+              <motion.div
+                className={`h-full ${item.color} bg-opacity-80`}
+                style={{ width: `${Math.max(Number(item.percentage), 1)}%` }}
+                initial={{ width: 0 }}
+                animate={{ width: `${Math.max(Number(item.percentage), 1)}%` }}
+                transition={{ 
+                  duration: 1.2, 
+                  delay: item.delay, 
+                  ease: "easeOut" 
+                }}
+              />
+            </div>
+          </motion.div>
+        ))}
+      </div>
 
               <motion.div 
                 className="mt-12 h-[300px]"
