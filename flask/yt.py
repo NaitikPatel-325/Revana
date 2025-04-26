@@ -64,8 +64,20 @@ def process_comments():
     
     print(df["Compound"])
 
+    
+
     # Classify Sentiment
-    df["Sentiment"] = df["Compound"].apply(lambda x: 'Positive' if x >= 0.3 else 'Negative' if x <= -0.3 else 'Neutral')
+    def classify_sentiment(x):
+        print(f"x = {x}")
+        if x >= 0.25:
+            return 'Positive'
+        elif x <= -0.25:
+            return 'Negative'
+        else:
+            return 'Neutral'
+
+    df["Sentiment"] = df["Compound"].apply(classify_sentiment)
+
 
 
     # Encode Sentiments

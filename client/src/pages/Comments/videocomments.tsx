@@ -250,9 +250,10 @@ export default function Comments({ videoId }: CommentsProps) {
                           <div className="relative bg-gray-700/30 rounded-lg p-3">
                             <p className="text-gray-200">{comment.text}</p>
                             <motion.div
-                              initial={{ scale: 0.9, opacity: 0 }}
+                              initial={{ scale: 0.5, opacity: 0 }}
                               animate={{ scale: 1, opacity: 1 }}
-                              className="absolute -top-2 right-2"
+                              className="absolute -top-10 -right-2"
+
                             >
                               <motion.span
                                   whileHover={{ scale: 1.1 }}
