@@ -45,7 +45,7 @@
 // export const { updateCurrentUser, updateIsLoggedIn, setLoginMethod, setCurrentWidth } = appSlice.actions;
 
 
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 const appSlice = createSlice({
   name: "app",
@@ -79,6 +79,17 @@ const appSlice = createSlice({
     setSentimentCounts: (state, action) => { 
       state.TotalSentimentCount = action.payload;
     },
+    incrementSentimentCount: (state, action: PayloadAction<2 | 1 | 0>) => {
+      console.log("In appSlice : ",action.payload);
+      const sentiment = action.payload;
+      if(sentiment==2)
+        state.TotalSentimentCount['good']++;
+      else if(sentiment==1)
+        state.TotalSentimentCount['neutral']++;
+      else if(sentiment==0)
+        state.TotalSentimentCount['bad']++;
+    }
+    ,
     updateCurrentVideo: (state, action) => {
       console.log("Video-data action-payload : ",action.payload);
       state.videodata = action.payload;
@@ -89,5 +100,5 @@ const appSlice = createSlice({
   },
 });
 
-export const { updateCurrentUser, updateIsLoggedIn, setCurrentWidth, updateLoginMethod, setSentimentCounts,updateCurrentVideo, setVideoDescription  } = appSlice.actions;
+export const { updateCurrentUser, updateIsLoggedIn, setCurrentWidth, updateLoginMethod, setSentimentCounts,updateCurrentVideo, setVideoDescription,incrementSentimentCount  } = appSlice.actions;
 export default appSlice.reducer;

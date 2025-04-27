@@ -5,6 +5,7 @@
 
 
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 import pickle
 import pandas as pd
 import re
@@ -32,7 +33,8 @@ app = Flask(__name__)
 sentiments = SentimentIntensityAnalyzer()
 stop_words = set(stopwords.words('english'))
 lemmatizer = WordNetLemmatizer()
-file_path = "amazon_vfl_reviews.xls"  
+file_path = "amazon_vfl_reviews.xls" 
+CORS(app) 
 
 def text_processing(text):
     text = text.lower()
@@ -67,27 +69,30 @@ def process_comments():
     
 
     # Classify Sentiment
+    # Classify Sentiment
     def classify_sentiment(x):
-        print(f"x = {x}")
-        if x >= 0.25:
+        if x >= 0.05:
             return 'Positive'
-        elif x <= -0.25:
+        elif x <= -0.05:
             return 'Negative'
         else:
             return 'Neutral'
 
     df["Sentiment"] = df["Compound"].apply(classify_sentiment)
 
-
-
-    # Encode Sentiments
-    le = LabelEncoder()
-    df['Sentiment'] = le.fit_transform(df['Sentiment'])
+    # Correct Mapping
+    sentiment_mapping = {
+        'Negative': 0,
+        'Neutral': 1,
+        'Positive': 2
+    }
+    df['Sentiment'] = df['Sentiment'].map(sentiment_mapping)
 
     processed_comments = df[['Comment', 'Sentiment']].to_dict(orient='records')
+
     
     
-    # print(processed_comments)
+    print(f" Processed Commentss :  ${processed_comments}\n")
     
     
     return jsonify({'comments': processed_comments})

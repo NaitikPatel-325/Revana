@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useGetUserDetailsQuery } from "@/redux/slices/api";
-import { setSentimentCounts, setVideoDescription, updateCurrentVideo } from "@/redux/slices/appSlice";
+import { incrementSentimentCount, setSentimentCounts, setVideoDescription, updateCurrentVideo } from "@/redux/slices/appSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { motion, AnimatePresence } from "framer-motion";
@@ -43,6 +43,9 @@ export default function Comments({ videoId }: CommentsProps) {
   const { data } = useGetUserDetailsQuery();
   const dispatch = useDispatch();
   const videodata = useSelector((state: RootState) => state.appSlice.videodata);
+  const TotalSentimentCounts: SentimentCountType = useSelector(
+    (state: RootState) => state.appSlice.TotalSentimentCount
+  );
   console.log("VideoData : ", videodata);
 
   useEffect(() => {
@@ -73,6 +76,25 @@ export default function Comments({ videoId }: CommentsProps) {
     if (!newComment.trim()) return;
 
     try {
+
+      const flaskResponse = await axios.post(
+        "http://127.0.0.1:5000/api/v1/youtube-comments",
+        { comments: [String(newComment)] },
+        {
+          headers: {
+            "Content-Type": "application/json;charset=UTF-8",
+          },
+        }
+      );
+      
+
+      console.log("Flask Response Client ",flaskResponse);
+
+      if (!flaskResponse.data.comments) {
+        console.error("Error adding comment:");
+      }
+
+
       await axios.post(
         `http://localhost:4000/user/comments/videos/${videoId}/add-comment`,
         { text: newComment },
@@ -92,9 +114,11 @@ export default function Comments({ videoId }: CommentsProps) {
         author: data?.email as string,
         text: newComment,
         profileImage: "",
-        sentiment: 1,
-        sentimentText: newComment,
+        sentiment: flaskResponse.data.comments[0].Sentiment,
+        sentimentText: flaskResponse.data.comments[0].Comment,
       };
+
+      dispatch(incrementSentimentCount(flaskResponse.data.comments[0].Sentiment));
 
       setNewComment("");
       setComments((prev) => [newCommentObj, ...prev]);

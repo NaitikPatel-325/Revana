@@ -6,7 +6,7 @@ import { RootState } from "@/redux/store";
 import { useDispatch, useSelector } from "react-redux";
 import { Navigate } from "react-router-dom";
 import {SentimentCountType} from "./videocomments"
-import { setSentimentCounts } from "@/redux/slices/appSlice";
+import { incrementSentimentCount, setSentimentCounts } from "@/redux/slices/appSlice";
 
 interface Review {
   asin: string;
@@ -46,6 +46,10 @@ export default function Fashion() {
   const dispatch = useDispatch();
 
   const TSC = useSelector((state: RootState) => state.appSlice.TotalSentimentCount);
+
+  const TotalSentimentCounts: SentimentCountType = useSelector(
+      (state: RootState) => state.appSlice.TotalSentimentCount
+    );
 
   const isLoggedIn = useSelector((state: RootState) => state.appSlice.isLoggedIn);
 
@@ -107,6 +111,17 @@ export default function Fashion() {
     setError(null);
 
     try {
+
+      const flaskResponse = await axios.post("http://127.0.0.1:5000/api/v1/youtube-comments", {
+        comments: [userReview],  // send it as an array containing the single comment
+      });
+
+      console.log("Flask Response Client ",flaskResponse);
+
+      if (!flaskResponse.data.comments) {
+        console.error("Error adding comment:");
+      }
+
       const newReview: IFashionSchema = {
         asin: product[0].asin,
         name: product[0].name,
@@ -120,6 +135,7 @@ export default function Fashion() {
       await axios.post('http://localhost:4000/user/amazon/review', newReview);
       
       // Update local state
+      dispatch(incrementSentimentCount(flaskResponse.data.comments[0].Sentiment));
       setProduct([newReview, ...product]);
       setUserReview("");
       
